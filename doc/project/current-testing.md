@@ -32,6 +32,7 @@
   - 로그인 화면 HTTP 응답 확인
   - Swagger 접근 확인
   - 로그인 API 성공/실패/잠금 흐름 확인
+  - GitHub Actions CI 워크플로 검증
 
 ---
 
@@ -96,6 +97,18 @@ make up
 make status
 make down
 ```
+
+### CI 검증
+- GitHub Actions 워크플로 파일: `.github/workflows/ci.yml`
+- 현재 CI 검증 범위:
+  - `go test ./...`
+  - `go build ./cmd/server`
+  - `go vet ./...`
+  - `make up` / `make status` / `make down`
+  - 로그인 화면 응답 확인
+  - Swagger 응답 확인
+  - 로그인 성공 시나리오 확인
+  - 5회째 잠금 시나리오 확인
 
 ### 주요 확인 지점
 - 로그인 화면: `http://localhost:3000`

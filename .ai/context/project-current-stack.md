@@ -22,6 +22,7 @@
 - api_contract: OpenAPI 3.0.3 static yaml
 - orchestration: Docker Compose
 - operator_entrypoint: root Makefile
+- ci_entrypoint: `.github/workflows/ci.yml`
 
 ## current_services
 - db:

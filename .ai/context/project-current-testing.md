@@ -27,6 +27,7 @@
   - login page http check
   - swagger route check
   - login success/failure/lock verification
+  - github actions ci workflow verification
 
 
 ## current_gaps
@@ -34,6 +35,13 @@
 - no browser automation E2E tests
 - no isolated database integration test suite
 - no refresh-token flow tests
+
+## ci_status
+- workflow_exists: true
+- workflow_path: `.github/workflows/ci.yml`
+- current_jobs:
+  - go-checks
+  - docker-smoke
 
 ## sync_note
 - If tests, verification commands, or validation flow changes, this file must be re-reviewed.
