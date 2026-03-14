@@ -1,0 +1,39 @@
+package auth
+
+import "net/http"
+
+const (
+	CodeInvalidRequestBody  = "INVALID_REQUEST_BODY"
+	CodeInvalidLoginID      = "INVALID_LOGIN_ID_FORMAT"
+	CodeInvalidPassword     = "INVALID_PASSWORD_FORMAT"
+	CodeMissingRequired     = "MISSING_REQUIRED_FIELD"
+	CodeInvalidCredentials  = "INVALID_CREDENTIALS"
+	CodeAccountLocked       = "ACCOUNT_LOCKED"
+	CodeInternalServerError = "INTERNAL_SERVER_ERROR"
+)
+
+type AppError struct {
+	Status  int
+	Code    string
+	Message string
+}
+
+func (e *AppError) Error() string {
+	return e.Code
+}
+
+func NewBadRequest(code string) *AppError {
+	return &AppError{Status: http.StatusBadRequest, Code: code, Message: "입력값 형식이 올바르지 않습니다."}
+}
+
+func NewUnauthorized() *AppError {
+	return &AppError{Status: http.StatusUnauthorized, Code: CodeInvalidCredentials, Message: "로그인 ID 또는 비밀번호가 올바르지 않습니다."}
+}
+
+func NewLocked() *AppError {
+	return &AppError{Status: http.StatusLocked, Code: CodeAccountLocked, Message: "계정이 일시적으로 잠겼습니다. 잠시 후 다시 시도해 주세요."}
+}
+
+func NewInternalServerError() *AppError {
+	return &AppError{Status: http.StatusInternalServerError, Code: CodeInternalServerError, Message: "요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요."}
+}
