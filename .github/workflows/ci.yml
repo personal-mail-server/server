@@ -86,9 +86,9 @@ jobs:
               assert isinstance(payload['accessToken'], str) and payload['accessToken']
               assert isinstance(payload['refreshToken'], str) and payload['refreshToken']
               assert payload['accessTokenExpiresIn'] == 1800
-               assert payload['refreshTokenExpiresIn'] == 604800
-               assert payload['tokenType'] == 'Bearer'
-           PY
+              assert payload['refreshTokenExpiresIn'] == 604800
+              assert payload['tokenType'] == 'Bearer'
+          PY
 
       - name: Check logout flow
         run: |
