@@ -39,6 +39,12 @@
 2. 사용자의 현재 지시
 3. `project/.ai/context`의 AI 정리 문서
 
+작업 시작 절차의 우선순위는 아래와 같다.
+
+1. `project/.ai/context`에서 관련 정리 문서를 먼저 조회
+2. 작업 해석과 진행은 `project/.ai/context`를 우선 기준으로 사용
+3. 충돌 또는 해석 불가일 때만 원본 문서(`project/doc`, `README.md`, `TECH_STACK.md`, `TRIGGERS.md`)를 다시 조회
+
 단, 사용자의 현재 지시가 원본 문서와 명확히 충돌하거나 해석이 불가능한 경우에는 사용자에게 다시 확인한다.
 
 ---

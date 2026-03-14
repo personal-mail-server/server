@@ -18,6 +18,8 @@
 ## invocation_rule
 - If the user input consists of a reserved trigger word alone, the AI must treat it as a valid trigger invocation immediately.
 - This single-word invocation rule applies to all reserved triggers listed in this file.
+- At trigger start, the AI should read relevant `project/.ai/context` documents first and use them as the primary working reference.
+- If context content conflicts with source documents or is not interpretable, the AI should fall back to source-of-truth documents.
 - If required information is missing, the AI should stay inside the selected trigger flow and ask only the missing trigger-specific questions.
 
 ## push_trigger_summary
