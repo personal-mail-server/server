@@ -38,12 +38,13 @@
 ## frontend_document_status
 - frontend behavior doc exists: `doc/auth/login-frontend.md`
 - current frontend scope:
-  - login form only
+  - login form
   - client-side validation
+  - authenticated state summary after login
   - status panel with raw JSON response output
   - swagger link exposure
-  - no redirect after login
-  - no token persistence UI
+  - logout entry via user menu after login
+  - no browser-persistent token storage
 
 ## login_feature_scope
 

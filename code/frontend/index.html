@@ -9,46 +9,80 @@
   <body>
     <main class="page-shell">
       <section class="login-card">
-        <header class="card-header">
-          <h1>로그인</h1>
-          <p>Personal Mail Server 계정으로 로그인하세요.</p>
-        </header>
+        <section id="login-view">
+          <header class="card-header">
+            <h1>로그인</h1>
+            <p>Personal Mail Server 계정으로 로그인하세요.</p>
+          </header>
 
-        <form id="login-form" class="login-form" novalidate>
-          <label class="field">
-            <span>로그인 ID</span>
-            <input
-              id="loginId"
-              name="loginId"
-              type="text"
-              inputmode="text"
-              autocomplete="username"
-              placeholder="user-01"
-              maxlength="32"
-              required
-            />
-          </label>
+          <form id="login-form" class="login-form" novalidate>
+            <label class="field">
+              <span>로그인 ID</span>
+              <input
+                id="loginId"
+                name="loginId"
+                type="text"
+                inputmode="text"
+                autocomplete="username"
+                placeholder="user-01"
+                maxlength="32"
+                required
+              />
+            </label>
 
-          <label class="field">
-            <span>비밀번호</span>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autocomplete="current-password"
-              placeholder="비밀번호 입력"
-              maxlength="64"
-              required
-            />
-          </label>
+            <label class="field">
+              <span>비밀번호</span>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="비밀번호 입력"
+                maxlength="64"
+                required
+              />
+            </label>
 
-          <button id="submit-button" type="submit">로그인</button>
-        </form>
+            <button id="submit-button" type="submit">로그인</button>
+          </form>
 
-        <div class="helper-box">
-          <p>테스트 계정: <code>user-01</code> / <code>pass1234</code></p>
-          <a href="/docs" target="_blank" rel="noreferrer">Swagger 보기</a>
-        </div>
+          <div class="helper-box">
+            <p>테스트 계정: <code>user-01</code> / <code>pass1234</code></p>
+            <a href="/docs" target="_blank" rel="noreferrer">Swagger 보기</a>
+          </div>
+        </section>
+
+        <section id="auth-view" class="hidden" aria-live="polite">
+          <header class="card-header auth-header">
+            <div>
+              <h1>인증됨</h1>
+              <p>현재 로그인된 세션 정보를 확인할 수 있습니다.</p>
+            </div>
+            <div class="user-menu">
+              <span id="user-menu-label" class="user-chip">-</span>
+              <button id="logout-button" type="button" class="secondary-button">로그아웃</button>
+            </div>
+          </header>
+
+          <section class="session-summary">
+            <div>
+              <span class="summary-label">로그인 ID</span>
+              <strong id="session-login-id">-</strong>
+            </div>
+            <div>
+              <span class="summary-label">토큰 타입</span>
+              <strong id="session-token-type">-</strong>
+            </div>
+            <div>
+              <span class="summary-label">액세스 만료(초)</span>
+              <strong id="session-access-expiry">-</strong>
+            </div>
+            <div>
+              <span class="summary-label">리프레시 만료(초)</span>
+              <strong id="session-refresh-expiry">-</strong>
+            </div>
+          </section>
+        </section>
 
         <section id="status-panel" class="status-panel status-idle" aria-live="polite">
           <p id="status-message">로그인 결과가 여기에 표시됩니다.</p>

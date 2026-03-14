@@ -31,10 +31,10 @@
   - role: persistent auth state storage
 - backend:
   - runtime: compiled Go binary
-  - role: login API, OpenAPI file, Swagger page, health check
+  - role: login API, logout API, OpenAPI file, Swagger page, health check
 - frontend:
   - runtime: nginx
-  - role: login page and reverse proxy to backend `/api` and `/docs`
+  - role: auth page with login/logout interaction and reverse proxy to backend `/api` and `/docs`
 
 ## current_ports
 - frontend_public: 3000
@@ -43,8 +43,11 @@
 - db_internal: 5432
 
 ## auth_slice_status
-- implemented_feature: login only
+- implemented_feature:
+  - login
+  - logout
 - token_model: access + refresh
+- logout_invalidation: session versioning
 - lock_policy: 5 failures -> 10 minute lock
 - seed_user:
   - loginId: `user-01`

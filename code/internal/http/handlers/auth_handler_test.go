@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 
 	"personal-mail-server/internal/auth"
@@ -41,6 +42,17 @@ func (r *testRepo) ResetFailures(_ context.Context, _ int64) error {
 	return nil
 }
 
+func (r *testRepo) IncrementSessionVersion(_ context.Context, _ int64, currentVersion int) (bool, error) {
+	if r.user == nil {
+		return false, auth.ErrUserNotFound
+	}
+	if r.user.SessionVersion != currentVersion {
+		return false, nil
+	}
+	r.user.SessionVersion++
+	return true, nil
+}
+
 type fixedClock struct {
 	now time.Time
 }
@@ -49,13 +61,26 @@ func (c fixedClock) Now() time.Time { return c.now }
 
 type fixedIssuer struct{}
 
-func (fixedIssuer) IssuePair(_ time.Time, _ string) (string, string, error) {
+func (fixedIssuer) IssuePair(_ time.Time, _ string, _ int) (string, string, error) {
 	return "a", "r", nil
+}
+
+func (fixedIssuer) VerifyAccessToken(raw string) (*auth.AuthTokenClaims, error) {
+	if raw != "valid-access-token" {
+		return nil, auth.ErrInvalidToken
+	}
+	return &auth.AuthTokenClaims{
+		TokenUse:       auth.TokenUseAccess,
+		SessionVersion: 1,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: "user-01",
+		},
+	}, nil
 }
 
 func TestAuthHandlerInvalidJSON(t *testing.T) {
 	e := echo.New()
-	repo := &testRepo{}
+	repo := &testRepo{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}
 	service := auth.NewService(repo, fixedIssuer{}, fixedClock{now: time.Now().UTC()})
 	h := NewAuthHandler(service)
 
@@ -77,5 +102,56 @@ func TestAuthHandlerInvalidJSON(t *testing.T) {
 	}
 	if body.Code != auth.CodeInvalidRequestBody {
 		t.Fatalf("expected INVALID_REQUEST_BODY, got %s", body.Code)
+	}
+}
+
+func TestAuthHandlerLogoutMissingAuthorization(t *testing.T) {
+	e := echo.New()
+	repo := &testRepo{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}
+	service := auth.NewService(repo, fixedIssuer{}, fixedClock{now: time.Now().UTC()})
+	h := NewAuthHandler(service)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/logout", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	if err := h.Logout(c); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status 401, got %d", rec.Code)
+	}
+
+	var body auth.ErrorResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("unmarshal response: %v", err)
+	}
+	if body.Code != auth.CodeInvalidAccessToken {
+		t.Fatalf("expected INVALID_ACCESS_TOKEN, got %s", body.Code)
+	}
+}
+
+func TestAuthHandlerLogoutSuccess(t *testing.T) {
+	e := echo.New()
+	repo := &testRepo{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}
+	service := auth.NewService(repo, fixedIssuer{}, fixedClock{now: time.Now().UTC()})
+	h := NewAuthHandler(service)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/logout", nil)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	if err := h.Logout(c); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("expected status 204, got %d", rec.Code)
+	}
+	if rec.Body.Len() != 0 {
+		t.Fatalf("expected empty body, got %q", rec.Body.String())
+	}
+	if repo.user.SessionVersion != 2 {
+		t.Fatalf("expected session version incremented to 2, got %d", repo.user.SessionVersion)
 	}
 }

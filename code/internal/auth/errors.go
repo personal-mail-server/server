@@ -8,6 +8,7 @@ const (
 	CodeInvalidPassword     = "INVALID_PASSWORD_FORMAT"
 	CodeMissingRequired     = "MISSING_REQUIRED_FIELD"
 	CodeInvalidCredentials  = "INVALID_CREDENTIALS"
+	CodeInvalidAccessToken  = "INVALID_ACCESS_TOKEN"
 	CodeAccountLocked       = "ACCOUNT_LOCKED"
 	CodeInternalServerError = "INTERNAL_SERVER_ERROR"
 )
@@ -28,6 +29,10 @@ func NewBadRequest(code string) *AppError {
 
 func NewUnauthorized() *AppError {
 	return &AppError{Status: http.StatusUnauthorized, Code: CodeInvalidCredentials, Message: "로그인 ID 또는 비밀번호가 올바르지 않습니다."}
+}
+
+func NewInvalidAccessToken() *AppError {
+	return &AppError{Status: http.StatusUnauthorized, Code: CodeInvalidAccessToken, Message: "인증 정보가 유효하지 않습니다. 다시 로그인해 주세요."}
 }
 
 func NewLocked() *AppError {

@@ -71,7 +71,7 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) (*LoginResponse, 
 		return nil, NewInternalServerError()
 	}
 
-	accessToken, refreshToken, err := s.issuer.IssuePair(now, user.LoginID)
+	accessToken, refreshToken, err := s.issuer.IssuePair(now, user.LoginID, user.SessionVersion)
 	if err != nil {
 		return nil, NewInternalServerError()
 	}
@@ -83,6 +83,35 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) (*LoginResponse, 
 		RefreshTokenExpiresIn: RefreshTokenExpiresInSeconds,
 		TokenType:             TokenTypeBearer,
 	}, nil
+}
+
+func (s *Service) Logout(ctx context.Context, rawAccessToken string) *AppError {
+	claims, err := s.issuer.VerifyAccessToken(rawAccessToken)
+	if err != nil {
+		return NewInvalidAccessToken()
+	}
+
+	user, repoErr := s.repo.FindByLoginID(ctx, claims.Subject)
+	if repoErr != nil {
+		if errors.Is(repoErr, ErrUserNotFound) {
+			return NewInvalidAccessToken()
+		}
+		return NewInternalServerError()
+	}
+
+	if user.SessionVersion != claims.SessionVersion {
+		return NewInvalidAccessToken()
+	}
+
+	updated, err := s.repo.IncrementSessionVersion(ctx, user.ID, user.SessionVersion)
+	if err != nil {
+		return NewInternalServerError()
+	}
+	if !updated {
+		return NewInvalidAccessToken()
+	}
+
+	return nil
 }
 
 func HashPassword(rawPassword string) (string, error) {

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type fakeClock struct {
@@ -13,10 +15,27 @@ type fakeClock struct {
 
 func (f fakeClock) Now() time.Time { return f.now }
 
-type fakeIssuer struct{}
+type fakeIssuer struct {
+	verifyClaims      *AuthTokenClaims
+	verifyErr         error
+	lastIssuedLoginID string
+	lastIssuedVersion int
+}
 
-func (f fakeIssuer) IssuePair(_ time.Time, _ string) (string, string, error) {
+func (f *fakeIssuer) IssuePair(_ time.Time, loginID string, sessionVersion int) (string, string, error) {
+	f.lastIssuedLoginID = loginID
+	f.lastIssuedVersion = sessionVersion
 	return "access-token", "refresh-token", nil
+}
+
+func (f *fakeIssuer) VerifyAccessToken(_ string) (*AuthTokenClaims, error) {
+	if f.verifyErr != nil {
+		return nil, f.verifyErr
+	}
+	if f.verifyClaims == nil {
+		return nil, ErrInvalidToken
+	}
+	return f.verifyClaims, nil
 }
 
 type memoryRepo struct {
@@ -68,8 +87,9 @@ func TestLoginSuccessResetsFailures(t *testing.T) {
 	}
 
 	repo := newMemoryRepo()
-	repo.users["user-1"] = &User{ID: 1, LoginID: "user-1", PasswordHash: hash, FailedAttempts: 4}
-	service := NewService(repo, fakeIssuer{}, fakeClock{now: time.Date(2026, 3, 14, 0, 0, 0, 0, time.UTC)})
+	repo.users["user-1"] = &User{ID: 1, LoginID: "user-1", PasswordHash: hash, FailedAttempts: 4, SessionVersion: 3}
+	issuer := &fakeIssuer{}
+	service := NewService(repo, issuer, fakeClock{now: time.Date(2026, 3, 14, 0, 0, 0, 0, time.UTC)})
 
 	resp, appErr := service.Login(context.Background(), LoginRequest{LoginID: "user-1", Password: "pass1234"})
 	if appErr != nil {
@@ -80,6 +100,9 @@ func TestLoginSuccessResetsFailures(t *testing.T) {
 	}
 	if resp.AccessTokenExpiresIn != 1800 || resp.RefreshTokenExpiresIn != 604800 || resp.TokenType != "Bearer" {
 		t.Fatalf("unexpected token metadata: %+v", resp)
+	}
+	if issuer.lastIssuedLoginID != "user-1" || issuer.lastIssuedVersion != 3 {
+		t.Fatalf("expected issuer to receive current session version, got loginID=%s version=%d", issuer.lastIssuedLoginID, issuer.lastIssuedVersion)
 	}
 
 	stored := repo.users["user-1"]
@@ -100,7 +123,7 @@ func TestLoginInvalidCredentialFlowAndLockOnFifthFailure(t *testing.T) {
 	now := time.Date(2026, 3, 14, 0, 0, 0, 0, time.UTC)
 	repo := newMemoryRepo()
 	repo.users["user-2"] = &User{ID: 2, LoginID: "user-2", PasswordHash: hash, FailedAttempts: 3}
-	service := NewService(repo, fakeIssuer{}, fakeClock{now: now})
+	service := NewService(repo, &fakeIssuer{}, fakeClock{now: now})
 
 	_, err4 := service.Login(context.Background(), LoginRequest{LoginID: "user-2", Password: "wrong1234"})
 	if err4 == nil || err4.Status != 401 || err4.Code != CodeInvalidCredentials {
@@ -132,16 +155,71 @@ func TestLoginBlockedDuringLockAndAllowedAfterUnlock(t *testing.T) {
 	repo := newMemoryRepo()
 	repo.users["user-3"] = &User{ID: 3, LoginID: "user-3", PasswordHash: hash, FailedAttempts: 5, LockedUntil: &lockedUntil}
 
-	serviceLocked := NewService(repo, fakeIssuer{}, fakeClock{now: now})
+	serviceLocked := NewService(repo, &fakeIssuer{}, fakeClock{now: now})
 	_, appErr := serviceLocked.Login(context.Background(), LoginRequest{LoginID: "user-3", Password: "pass1234"})
 	if appErr == nil || appErr.Status != 423 {
 		t.Fatalf("expected locked response while lock active, got %+v", appErr)
 	}
 
 	afterUnlock := lockedUntil.Add(time.Second)
-	serviceAfter := NewService(repo, fakeIssuer{}, fakeClock{now: afterUnlock})
+	serviceAfter := NewService(repo, &fakeIssuer{}, fakeClock{now: afterUnlock})
 	_, appErr = serviceAfter.Login(context.Background(), LoginRequest{LoginID: "user-3", Password: "pass1234"})
 	if appErr != nil {
 		t.Fatalf("expected success after lock expired, got %+v", appErr)
 	}
+}
+
+func (m *memoryRepo) IncrementSessionVersion(_ context.Context, userID int64, currentVersion int) (bool, error) {
+	for _, user := range m.users {
+		if user.ID == userID {
+			if user.SessionVersion != currentVersion {
+				return false, nil
+			}
+			user.SessionVersion++
+			return true, nil
+		}
+	}
+	return false, errors.New("user not found")
+}
+
+func TestLogoutSuccessIncrementsSessionVersion(t *testing.T) {
+	repo := newMemoryRepo()
+	repo.users["user-4"] = &User{ID: 4, LoginID: "user-4", SessionVersion: 2}
+	issuer := &fakeIssuer{verifyClaims: &AuthTokenClaims{TokenUse: TokenUseAccess, SessionVersion: 2, RegisteredClaims: registeredClaimsForSubject("user-4")}}
+	service := NewService(repo, issuer, fakeClock{now: time.Now().UTC()})
+
+	appErr := service.Logout(context.Background(), "valid-access-token")
+	if appErr != nil {
+		t.Fatalf("expected success, got %+v", appErr)
+	}
+	if repo.users["user-4"].SessionVersion != 3 {
+		t.Fatalf("expected session version incremented to 3, got %d", repo.users["user-4"].SessionVersion)
+	}
+}
+
+func TestLogoutRejectsInvalidToken(t *testing.T) {
+	repo := newMemoryRepo()
+	issuer := &fakeIssuer{verifyErr: ErrInvalidToken}
+	service := NewService(repo, issuer, fakeClock{now: time.Now().UTC()})
+
+	appErr := service.Logout(context.Background(), "bad-token")
+	if appErr == nil || appErr.Status != 401 || appErr.Code != CodeInvalidAccessToken {
+		t.Fatalf("expected 401 INVALID_ACCESS_TOKEN, got %+v", appErr)
+	}
+}
+
+func TestLogoutRejectsRevokedSessionVersion(t *testing.T) {
+	repo := newMemoryRepo()
+	repo.users["user-5"] = &User{ID: 5, LoginID: "user-5", SessionVersion: 4}
+	issuer := &fakeIssuer{verifyClaims: &AuthTokenClaims{TokenUse: TokenUseAccess, SessionVersion: 3, RegisteredClaims: registeredClaimsForSubject("user-5")}}
+	service := NewService(repo, issuer, fakeClock{now: time.Now().UTC()})
+
+	appErr := service.Logout(context.Background(), "stale-token")
+	if appErr == nil || appErr.Status != 401 || appErr.Code != CodeInvalidAccessToken {
+		t.Fatalf("expected 401 INVALID_ACCESS_TOKEN, got %+v", appErr)
+	}
+}
+
+func registeredClaimsForSubject(subject string) jwt.RegisteredClaims {
+	return jwt.RegisteredClaims{Subject: subject}
 }

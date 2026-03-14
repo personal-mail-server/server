@@ -24,14 +24,14 @@
 - logout feature design exists: `doc/auth/logout.md`
 - logout API spec exists: `doc/auth/logout-api.md`
 - logout frontend behavior doc exists: `doc/auth/logout-frontend.md`
-- current codebase still has login-only implementation and no logout runtime path yet
+- current codebase includes logout runtime path and frontend logout entry
 - logout-specific API details have been confirmed by the user and reflected in source documents
 
 ## current_constraints
 - current login docs explicitly exclude logout from their scope
 - current code issues JWT access/refresh tokens only
-- current code has no token persistence, revocation store, or logout endpoint
-- frontend currently exposes login screen only
+- current code uses session versioning for account-wide invalidation
+- frontend currently exposes login and authenticated state transitions on the root page
 
 ## logout_scope
 
@@ -62,12 +62,11 @@
 - access_token_invalidation: session versioning
 
 ## implementation_gap
-- current auth service only supports login issuance
-- current repository interface has no session invalidation methods
-- actual implementation will require server-side state capable of account-wide session invalidation
+- refresh-token reissue flow is still not implemented
+- dedicated protected API validation middleware is still not implemented
 
 ## frontend_status
-- current login page has no logout UI
+- current root page includes logout entry after successful login
 - logout action should live in authenticated screens only
 - logout action placement: user menu
 - successful logout must clear client auth state and return to `/`

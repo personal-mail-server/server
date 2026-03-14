@@ -17,6 +17,7 @@
   - auth service tests
   - auth validation tests
   - auth handler tests
+  - logout service and handler tests
 - execution_checks:
   - `go test ./...`
   - `go build ./...`
@@ -28,6 +29,7 @@
   - swagger route check
   - openapi yaml route check
   - login success/failure/lock verification
+  - logout success and token reuse rejection verification
   - github actions ci workflow verification
   - push-trigger unit test verification
 
@@ -37,6 +39,7 @@
 - no browser automation E2E tests
 - no isolated database integration test suite
 - no refresh-token flow tests
+- no dedicated protected API middleware coverage yet
 
 ## ci_status
 - workflow_exists: true

@@ -1,4 +1,4 @@
-# Backend Login Sync Slice
+# Backend Auth Sync Slice
 
 ## 실행
 
@@ -32,7 +32,8 @@ docker compose -f code/docker-compose.yml up --build -d
 
 ## 확인 포인트
 - 로그인 화면: `http://localhost:3000`
-- API: `http://localhost:18080/api/v1/auth/login`
+- 로그인 API: `http://localhost:18080/api/v1/auth/login`
+- 로그아웃 API: `http://localhost:18080/api/v1/auth/logout`
 - OpenAPI: `http://localhost:3000/docs/openapi.yaml`
 - Swagger UI: `http://localhost:3000/docs`
 
