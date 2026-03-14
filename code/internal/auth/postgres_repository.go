@@ -20,7 +20,7 @@ func NewPostgresRepository(pool *pgxpool.Pool) *PostgresRepository {
 
 func (r *PostgresRepository) FindByLoginID(ctx context.Context, loginID string) (*User, error) {
 	const query = `
-		SELECT id, login_id, password_hash, failed_attempts, locked_until
+		SELECT id, login_id, password_hash, failed_attempts, locked_until, session_version
 		FROM users
 		WHERE login_id = $1
 	`
@@ -32,6 +32,7 @@ func (r *PostgresRepository) FindByLoginID(ctx context.Context, loginID string) 
 		&user.PasswordHash,
 		&user.FailedAttempts,
 		&user.LockedUntil,
+		&user.SessionVersion,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -79,4 +80,18 @@ func (r *PostgresRepository) ResetFailures(ctx context.Context, userID int64) er
 		return fmt.Errorf("reset failures: %w", err)
 	}
 	return nil
+}
+
+func (r *PostgresRepository) IncrementSessionVersion(ctx context.Context, userID int64, currentVersion int) (bool, error) {
+	const query = `
+		UPDATE users
+		SET session_version = session_version + 1, updated_at = NOW()
+		WHERE id = $1 AND session_version = $2
+	`
+
+	result, err := r.pool.Exec(ctx, query, userID, currentVersion)
+	if err != nil {
+		return false, fmt.Errorf("increment session version: %w", err)
+	}
+	return result.RowsAffected() == 1, nil
 }

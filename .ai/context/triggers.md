@@ -15,6 +15,11 @@
 - `현재테스트`
 - `PUSH`
 
+## invocation_rule
+- If the user input consists of a reserved trigger word alone, the AI must treat it as a valid trigger invocation immediately.
+- This single-word invocation rule applies to all reserved triggers listed in this file.
+- If required information is missing, the AI should stay inside the selected trigger flow and ask only the missing trigger-specific questions.
+
 ## push_trigger_summary
 - purpose: push current feature branch, create or reuse PR to `main`, and enable auto-merge
 - local_entrypoint: `make push-trigger`
@@ -30,6 +35,11 @@
   - Copilot review automation
   - automatic review comment fixing
   - automatic reply/resolve of review comments
+- pr_template:
+  - language: Korean
+  - sections:
+    - `## 요약`
+    - `## 기준 정보`
 
 ## sync_note
 - If trigger semantics change, this file must be re-reviewed together with `TRIGGERS.md`.

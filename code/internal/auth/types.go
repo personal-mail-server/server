@@ -9,6 +9,8 @@ const (
 	AccessTokenExpiresInSeconds  = 1800
 	RefreshTokenExpiresInSeconds = 604800
 	TokenTypeBearer              = "Bearer"
+	TokenUseAccess               = "access"
+	TokenUseRefresh              = "refresh"
 
 	MaxFailedAttempts = 5
 	LockDuration      = 10 * time.Minute
@@ -38,14 +40,17 @@ type User struct {
 	PasswordHash   string
 	FailedAttempts int
 	LockedUntil    *time.Time
+	SessionVersion int
 }
 
 type Repository interface {
 	FindByLoginID(ctx context.Context, loginID string) (*User, error)
 	IncrementFailure(ctx context.Context, userID int64, now time.Time) (int, *time.Time, error)
 	ResetFailures(ctx context.Context, userID int64) error
+	IncrementSessionVersion(ctx context.Context, userID int64, currentVersion int) (bool, error)
 }
 
 type TokenIssuer interface {
-	IssuePair(now time.Time, loginID string) (string, string, error)
+	IssuePair(now time.Time, loginID string, sessionVersion int) (string, string, error)
+	VerifyAccessToken(rawToken string) (*AuthTokenClaims, error)
 }

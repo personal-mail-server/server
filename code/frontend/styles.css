@@ -49,6 +49,13 @@ body {
   margin-bottom: 24px;
 }
 
+.auth-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .card-header h1 {
   margin: 0;
   font-size: 28px;
@@ -106,6 +113,14 @@ button {
   transition: background-color 160ms ease, opacity 160ms ease;
 }
 
+.secondary-button {
+  background: #111827;
+}
+
+.secondary-button:hover {
+  background: #1f2937;
+}
+
 button:hover {
   background: var(--primary-hover);
 }
@@ -138,6 +153,48 @@ button:disabled {
 .status-panel code,
 .status-panel pre {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+.hidden {
+  display: none;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.session-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.session-summary div {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f9fafb;
+}
+
+.summary-label {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .status-panel {
@@ -203,6 +260,19 @@ button:disabled {
   .login-card {
     padding: 24px 18px;
     border-radius: 14px;
+  }
+
+  .auth-header {
+    flex-direction: column;
+  }
+
+  .user-menu {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .session-summary {
+    grid-template-columns: 1fr;
   }
 
   .field input,

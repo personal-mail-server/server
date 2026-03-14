@@ -17,4 +17,5 @@ func Register(e *echo.Echo, authHandler *handlers.AuthHandler) {
 	v1 := e.Group("/api/v1")
 	authGroup := v1.Group("/auth")
 	authGroup.POST("/login", authHandler.Login)
+	authGroup.POST("/logout", authHandler.Logout)
 }
