@@ -136,3 +136,23 @@ AI가 실제로 작성하고 사용 중인 테스트 체계와 검증 흐름을 
 - 핵심 요구사항이 비어 있어 임의 작성 시 왜곡 가능성이 큰 경우
 
 위 경우에만 AI는 추가 확인 후 진행한다.
+
+### PUSH
+#### 의미
+현재 작업 브랜치를 원격에 push하고, `main` 대상 pull request를 생성 또는 재사용한 뒤 auto-merge를 예약하기 위한 예약 트리거
+
+#### 동작
+- AI는 현재 브랜치가 `main` 또는 `master`가 아닌지 먼저 확인한다.
+- AI는 작업 트리가 깨끗한지 확인한다.
+- AI는 현재 브랜치를 원격 `origin`에 push한다.
+- AI는 `main` 대상 pull request를 생성하거나, 이미 존재하는 열려 있는 pull request가 있으면 재사용한다.
+- AI는 pull request에 현재 CI가 연결되었는지 확인한 뒤 auto-merge를 예약한다.
+- AI는 강제 push, 강제 merge, 관리자 우회 merge를 사용하지 않는다.
+- 현재 버전의 `PUSH` 트리거는 Copilot 리뷰 자동 요청, 리뷰 코멘트 자동 수정, 자동 반박 댓글 작성까지는 포함하지 않는다.
+
+#### 예외
+- 현재 브랜치가 `main` 또는 `master`인 경우
+- 작업 트리에 커밋되지 않은 변경이 남아 있는 경우
+- `origin` remote가 없거나 접근할 수 없는 경우
+- `gh` CLI 인증이 없거나 pull request 생성 권한이 없는 경우
+- 저장소에서 auto-merge 기능을 사용할 수 없는 경우

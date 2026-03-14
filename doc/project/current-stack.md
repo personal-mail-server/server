@@ -30,6 +30,7 @@
 - 실행 방식: Docker Compose 기반 다중 서비스 실행
 - 루트 수동 실행 명령: `Makefile` 기반
 - CI/CD 검증: GitHub Actions 기반
+- PR 자동화 진입점: `PUSH` 트리거 및 `make push-trigger`
 
 ---
 
@@ -107,9 +108,14 @@
 - `make down`
 - `make status`
 - `make logs`
+- `make push-trigger`
 
 현재 CI 진입점:
 - `.github/workflows/ci.yml`
+
+현재 PR 자동화 진입점:
+- `code/cmd/push-trigger/main.go`
+- `make push-trigger`
 
 현재 외부 노출 포트:
 - 프론트엔드: `3000`

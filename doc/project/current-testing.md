@@ -26,13 +26,14 @@
   - 로그인 HTTP 핸들러 일부
 - 현재 실행 검증 대상:
   - `go test ./...`
-  - `go build ./cmd/server`
+  - `go build ./...`
   - `go vet ./...`
   - `make up` 기반 전체 스택 기동 확인
   - 로그인 화면 HTTP 응답 확인
   - Swagger 접근 확인
   - 로그인 API 성공/실패/잠금 흐름 확인
   - GitHub Actions CI 워크플로 검증
+  - PUSH 자동화 CLI 단위 테스트
 
 ---
 
@@ -68,6 +69,17 @@
 - 잘못된 JSON 요청 시 `400 Bad Request`
 - 오류 응답 코드 매핑 확인
 
+### PUSH 자동화 테스트
+위치:
+- `code/internal/automation/pushtrigger/service_test.go`
+
+현재 검증 항목:
+- 보호 브랜치(`main`, `master`) 실행 차단
+- 작업 트리 dirty 상태 차단
+- 기존 PR 재사용 여부
+- 새 PR 생성 흐름
+- auto-merge 예약 명령 호출 여부
+
 ---
 
 ## 통합 성격 검증
@@ -87,7 +99,7 @@
 ### 코드 레벨 검증
 ```bash
 go test ./...
-go build ./cmd/server
+go build ./...
 go vet ./...
 ```
 

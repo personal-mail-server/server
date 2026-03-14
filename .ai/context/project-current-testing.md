@@ -19,7 +19,7 @@
   - auth handler tests
 - execution_checks:
   - `go test ./...`
-  - `go build ./cmd/server`
+  - `go build ./...`
   - `go vet ./...`
   - `make up` stack startup check
   - `make status` stack status check
@@ -29,6 +29,7 @@
   - openapi yaml route check
   - login success/failure/lock verification
   - github actions ci workflow verification
+  - push-trigger unit test verification
 
 
 ## current_gaps
@@ -43,6 +44,11 @@
 - current_jobs:
   - go-checks
   - docker-smoke
+
+## push_trigger_status
+- workflow_exists: false
+- local_entrypoint: `make push-trigger`
+- implementation_path: `code/cmd/push-trigger/main.go`
 
 ## sync_note
 - If tests, verification commands, or validation flow changes, this file must be re-reviewed.

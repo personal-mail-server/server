@@ -23,6 +23,7 @@
 - orchestration: Docker Compose
 - operator_entrypoint: root Makefile
 - ci_entrypoint: `.github/workflows/ci.yml`
+- pr_automation_entrypoint: `make push-trigger`
 
 ## current_services
 - db:
