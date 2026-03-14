@@ -28,6 +28,7 @@ docker compose -f code/docker-compose.yml up --build -d
   - `origin` remote 설정 완료
   - 저장소에서 auto-merge 기능 사용 가능
 - 현재 버전은 Copilot 리뷰 자동 수집/해석은 포함하지 않는다.
+- PR 본문은 한국어 기준의 사람이 읽기 쉬운 형식으로 자동 작성한다.
 
 ## 확인 포인트
 - 로그인 화면: `http://localhost:3000`

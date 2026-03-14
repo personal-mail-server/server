@@ -30,6 +30,11 @@
   - Copilot review automation
   - automatic review comment fixing
   - automatic reply/resolve of review comments
+- pr_template:
+  - language: Korean
+  - sections:
+    - `## 요약`
+    - `## 기준 정보`
 
 ## sync_note
 - If trigger semantics change, this file must be re-reviewed together with `TRIGGERS.md`.
