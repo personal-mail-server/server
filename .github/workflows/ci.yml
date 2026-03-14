@@ -83,10 +83,15 @@ jobs:
           with urllib.request.urlopen(req) as resp:
               payload = json.loads(resp.read().decode())
               assert resp.status == 200
+              assert isinstance(payload['accessToken'], str) and payload['accessToken']
+              assert isinstance(payload['refreshToken'], str) and payload['refreshToken']
               assert payload['accessTokenExpiresIn'] == 1800
               assert payload['refreshTokenExpiresIn'] == 604800
               assert payload['tokenType'] == 'Bearer'
           PY
+
+      - name: Check openapi yaml
+        run: curl -fsS http://localhost:3000/docs/openapi.yaml >/tmp/openapi.yaml
 
       - name: Check login lock flow
         run: |
@@ -107,6 +112,14 @@ jobs:
 
           assert statuses[:4] == [401, 401, 401, 401], statuses
           assert statuses[4] == 423, statuses
+
+          valid = json.dumps({'loginId': 'user-01', 'password': 'pass1234'}).encode()
+          req = urllib.request.Request(url, data=valid, headers={'Content-Type': 'application/json'})
+          try:
+              with urllib.request.urlopen(req) as resp:
+                  raise AssertionError(f'expected locked response, got {resp.status}')
+          except urllib.error.HTTPError as exc:
+              assert exc.code == 423, exc.code
           PY
 
       - name: Show container logs on failure

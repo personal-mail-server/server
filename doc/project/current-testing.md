@@ -107,8 +107,10 @@ make down
   - `make up` / `make status` / `make down`
   - 로그인 화면 응답 확인
   - Swagger 응답 확인
+  - OpenAPI YAML 응답 확인
   - 로그인 성공 시나리오 확인
   - 5회째 잠금 시나리오 확인
+  - 잠금 이후 정상 비밀번호 차단 확인
 
 ### 주요 확인 지점
 - 로그인 화면: `http://localhost:3000`

@@ -26,6 +26,7 @@
   - `make down` stack shutdown check
   - login page http check
   - swagger route check
+  - openapi yaml route check
   - login success/failure/lock verification
   - github actions ci workflow verification
 
