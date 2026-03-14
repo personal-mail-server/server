@@ -21,6 +21,7 @@
 - frontend: static HTML/CSS/JS served by nginx
 - api_contract: OpenAPI 3.0.3 static yaml
 - orchestration: Docker Compose
+- operator_entrypoint: root Makefile
 
 ## current_services
 - db:

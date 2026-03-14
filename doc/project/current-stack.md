@@ -28,6 +28,7 @@
 - 프론트엔드: 정적 HTML/CSS/JavaScript + nginx
 - API 계약 문서: OpenAPI 3.0.3 정적 YAML
 - 실행 방식: Docker Compose 기반 다중 서비스 실행
+- 루트 수동 실행 명령: `Makefile` 기반
 
 ---
 
@@ -93,11 +94,18 @@
 - 오케스트레이션: `code/docker-compose.yml`
 - 백엔드 빌드: `code/Dockerfile`
 - 프론트엔드 빌드: `code/frontend/Dockerfile`
+- 루트 실행 진입점: `Makefile`
 
 현재 서비스 구성:
 - `db`: PostgreSQL
 - `backend`: Go + Echo 서버
 - `frontend`: nginx 정적 프론트엔드
+
+현재 기본 실행 명령:
+- `make up`
+- `make down`
+- `make status`
+- `make logs`
 
 현재 외부 노출 포트:
 - 프론트엔드: `3000`

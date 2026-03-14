@@ -3,8 +3,20 @@
 ## 실행
 
 ```bash
-docker compose -f code/docker-compose.yml up --build
+make up
 ```
+
+직접 Docker Compose를 사용할 경우에는 아래 명령을 사용할 수 있다.
+
+```bash
+docker compose -f code/docker-compose.yml up --build -d
+```
+
+## 루트 Make 명령
+- `make up` - DB, 백엔드, 프론트엔드 전체 스택 기동
+- `make down` - 전체 스택 종료
+- `make status` - 현재 컨테이너 상태 확인
+- `make logs` - 전체 스택 로그 확인
 
 ## 확인 포인트
 - 로그인 화면: `http://localhost:3000`

@@ -130,6 +130,27 @@ Personal Mail Server는 **하나의 계정으로 여러 개의 메일 주소를 
 
 ---
 
+## 실행
+
+프로젝트 루트에서 아래 명령으로 현재 스택을 실행할 수 있다.
+
+```bash
+make up
+```
+
+자주 사용하는 명령:
+- `make up` - 전체 스택 기동
+- `make down` - 전체 스택 종료
+- `make status` - 현재 컨테이너 상태 확인
+- `make logs` - 전체 로그 확인
+
+실행 후 주요 확인 경로:
+- 로그인 화면: `http://localhost:3000`
+- Swagger UI: `http://localhost:3000/docs`
+- 로그인 API: `http://localhost:18080/api/v1/auth/login`
+
+---
+
 ## 정리
 Personal Mail Server는  
 **여러 개의 메일 주소를 하나의 계정으로 통합 관리하면서, 메일 발송 테스트와 반송/거부/스팸 처리 같은 다양한 시나리오를 검증하기 위한 개인용 메일 서버 프로젝트**이다.

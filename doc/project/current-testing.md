@@ -28,7 +28,7 @@
   - `go test ./...`
   - `go build ./cmd/server`
   - `go vet ./...`
-  - Docker Compose 기동 확인
+  - `make up` 기반 전체 스택 기동 확인
   - 로그인 화면 HTTP 응답 확인
   - Swagger 접근 확인
   - 로그인 API 성공/실패/잠금 흐름 확인
@@ -92,7 +92,9 @@ go vet ./...
 
 ### Docker 실행 검증
 ```bash
-docker compose -f code/docker-compose.yml up --build -d
+make up
+make status
+make down
 ```
 
 ### 주요 확인 지점

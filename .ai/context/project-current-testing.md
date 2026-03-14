@@ -21,10 +21,13 @@
   - `go test ./...`
   - `go build ./cmd/server`
   - `go vet ./...`
-  - docker compose up check
+  - `make up` stack startup check
+  - `make status` stack status check
+  - `make down` stack shutdown check
   - login page http check
   - swagger route check
   - login success/failure/lock verification
+
 
 ## current_gaps
 - no frontend automated tests
