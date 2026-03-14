@@ -18,4 +18,4 @@ logs:
 	docker compose -f $(COMPOSE_FILE) logs -f
 
 push-trigger:
-	go run ./code/cmd/push-trigger --base $(BASE_BRANCH)
+	go -C code run ./cmd/push-trigger --base $(BASE_BRANCH)
