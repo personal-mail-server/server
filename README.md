@@ -149,8 +149,6 @@ make up
 - Swagger UI: `http://localhost:3000/docs`
 - 로그인 API: `http://localhost:18080/api/v1/auth/login`
 
----
-
 ## 정리
 Personal Mail Server는  
 **여러 개의 메일 주소를 하나의 계정으로 통합 관리하면서, 메일 발송 테스트와 반송/거부/스팸 처리 같은 다양한 시나리오를 검증하기 위한 개인용 메일 서버 프로젝트**이다.
