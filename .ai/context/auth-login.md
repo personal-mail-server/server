@@ -8,6 +8,7 @@
 ## source_documents
 - `doc/auth/login.md`
 - `doc/auth/login-api.md`
+- `doc/auth/login-frontend.md`
 - `TRIGGERS.md`
 - `AGENTS.md`
 - `TECH_STACK.md`
@@ -29,10 +30,20 @@
 - frontend stack: static HTML/CSS/JS via nginx container
 - database: PostgreSQL via Docker Compose
 - swagger/openapi: static OpenAPI served at `/docs/openapi.yaml`, proxied Swagger page at `/docs`
-- login page: available at frontend root
+- login page: available at frontend root with a single-card login form
 - seed user:
   - loginId: `user-01`
   - password: `pass1234`
+
+## frontend_document_status
+- frontend behavior doc exists: `doc/auth/login-frontend.md`
+- current frontend scope:
+  - login form only
+  - client-side validation
+  - status panel with raw JSON response output
+  - swagger link exposure
+  - no redirect after login
+  - no token persistence UI
 
 ## login_feature_scope
 
