@@ -1,0 +1,125 @@
+openapi: 3.0.3
+info:
+  title: Personal Mail Server Login API
+  version: 0.1.0
+  description: Login sync slice contract
+servers:
+  - url: /
+paths:
+  /api/v1/auth/login:
+    post:
+      summary: 로그인
+      description: 로그인 ID와 비밀번호를 검증하고 토큰 쌍을 발급한다.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: 로그인 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginSuccessResponse'
+        '400':
+          description: 요청 형식 또는 입력값 검증 실패
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidBody:
+                  value:
+                    code: INVALID_REQUEST_BODY
+                    message: 입력값 형식이 올바르지 않습니다.
+                invalidLogin:
+                  value:
+                    code: INVALID_LOGIN_ID_FORMAT
+                    message: 입력값 형식이 올바르지 않습니다.
+                invalidPassword:
+                  value:
+                    code: INVALID_PASSWORD_FORMAT
+                    message: 입력값 형식이 올바르지 않습니다.
+                missingField:
+                  value:
+                    code: MISSING_REQUIRED_FIELD
+                    message: 입력값 형식이 올바르지 않습니다.
+        '401':
+          description: 인증 실패
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INVALID_CREDENTIALS
+                message: 로그인 ID 또는 비밀번호가 올바르지 않습니다.
+        '423':
+          description: 계정 잠금
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: ACCOUNT_LOCKED
+                message: 계정이 일시적으로 잠겼습니다. 잠시 후 다시 시도해 주세요.
+        '500':
+          description: 서버 내부 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_SERVER_ERROR
+                message: 요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요.
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - loginId
+        - password
+      properties:
+        loginId:
+          type: string
+          minLength: 4
+          maxLength: 32
+          pattern: '^[a-z0-9-]{4,32}$'
+        password:
+          type: string
+          minLength: 8
+          maxLength: 64
+          pattern: '^(?=.*[A-Za-z])(?=.*[0-9])[^\s]{8,64}$'
+    LoginSuccessResponse:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+        - accessTokenExpiresIn
+        - refreshTokenExpiresIn
+        - tokenType
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        accessTokenExpiresIn:
+          type: integer
+          enum: [1800]
+        refreshTokenExpiresIn:
+          type: integer
+          enum: [604800]
+        tokenType:
+          type: string
+          enum: [Bearer]
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string

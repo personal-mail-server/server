@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Personal Mail Server Login</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="login-card">
+        <header class="card-header">
+          <h1>로그인</h1>
+          <p>Personal Mail Server 계정으로 로그인하세요.</p>
+        </header>
+
+        <form id="login-form" class="login-form" novalidate>
+          <label class="field">
+            <span>로그인 ID</span>
+            <input
+              id="loginId"
+              name="loginId"
+              type="text"
+              inputmode="text"
+              autocomplete="username"
+              placeholder="user-01"
+              maxlength="32"
+              required
+            />
+          </label>
+
+          <label class="field">
+            <span>비밀번호</span>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              placeholder="비밀번호 입력"
+              maxlength="64"
+              required
+            />
+          </label>
+
+          <button id="submit-button" type="submit">로그인</button>
+        </form>
+
+        <div class="helper-box">
+          <p>테스트 계정: <code>user-01</code> / <code>pass1234</code></p>
+          <a href="/docs" target="_blank" rel="noreferrer">Swagger 보기</a>
+        </div>
+
+        <section id="status-panel" class="status-panel status-idle" aria-live="polite">
+          <p id="status-message">로그인 결과가 여기에 표시됩니다.</p>
+          <pre id="status-payload">{}</pre>
+        </section>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

@@ -20,7 +20,19 @@
 ## document_status
 - login feature design exists: `doc/auth/login.md`
 - login API spec exists: `doc/auth/login-api.md`
-- implementation code does not exist yet under `code/`
+- backend login slice exists under `code/`
+- frontend login slice exists under `code/frontend/`
+- docker runnable slice exists under `code/docker-compose.yml` and `code/Dockerfile`
+
+## implementation_status
+- backend stack: Go + Echo
+- frontend stack: static HTML/CSS/JS via nginx container
+- database: PostgreSQL via Docker Compose
+- swagger/openapi: static OpenAPI served at `/docs/openapi.yaml`, proxied Swagger page at `/docs`
+- login page: available at frontend root
+- seed user:
+  - loginId: `user-01`
+  - password: `pass1234`
 
 ## login_feature_scope
 

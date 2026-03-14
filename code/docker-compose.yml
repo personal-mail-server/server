@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: personal-mail-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mail_server
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mail_server"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: personal-mail-backend
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      PORT: 8080
+      DATABASE_URL: postgres://postgres:postgres@db:5432/mail_server?sslmode=disable
+      ACCESS_TOKEN_SECRET: change-me-access-secret
+      REFRESH_TOKEN_SECRET: change-me-refresh-secret
+      REQUEST_TIMEOUT_SECONDS: 10
+    ports:
+      - "18080:8080"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: personal-mail-frontend
+    depends_on:
+      - backend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+
+volumes:
+  db_data:
