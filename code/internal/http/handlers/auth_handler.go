@@ -52,6 +52,23 @@ func (h *AuthHandler) Logout(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
+func (h *AuthHandler) Reissue(c echo.Context) error {
+	var req auth.ReissueRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, auth.ErrorResponse{
+			Code:    auth.CodeInvalidRequestBody,
+			Message: "입력값 형식이 올바르지 않습니다.",
+		})
+	}
+
+	resp, appErr := h.service.Reissue(c.Request().Context(), req)
+	if appErr != nil {
+		return c.JSON(appErr.Status, auth.ErrorResponse{Code: appErr.Code, Message: appErr.Message})
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
 func extractBearerToken(header string) (string, bool) {
 	prefix := auth.TokenTypeBearer + " "
 	if !strings.HasPrefix(header, prefix) {

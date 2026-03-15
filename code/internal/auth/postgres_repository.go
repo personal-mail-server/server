@@ -95,3 +95,57 @@ func (r *PostgresRepository) IncrementSessionVersion(ctx context.Context, userID
 	}
 	return result.RowsAffected() == 1, nil
 }
+
+func (r *PostgresRepository) StoreRefreshToken(ctx context.Context, userID int64, tokenID string, sessionVersion int, expiresAt time.Time) error {
+	const query = `
+		INSERT INTO refresh_tokens (token_id, user_id, session_version, expires_at)
+		VALUES ($1, $2, $3, $4)
+	`
+
+	if _, err := r.pool.Exec(ctx, query, tokenID, userID, sessionVersion, expiresAt); err != nil {
+		return fmt.Errorf("store refresh token: %w", err)
+	}
+
+	return nil
+}
+
+func (r *PostgresRepository) ConsumeRefreshTokenAndStoreReplacement(ctx context.Context, userID int64, currentTokenID, replacementTokenID string, sessionVersion int, now, replacementExpiresAt time.Time) (bool, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return false, fmt.Errorf("begin refresh token rotation tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	const consumeQuery = `
+		UPDATE refresh_tokens
+		SET used_at = $1, replaced_by_token_id = $2
+		WHERE token_id = $3
+		  AND user_id = $4
+		  AND session_version = $5
+		  AND used_at IS NULL
+		  AND expires_at > $1
+	`
+
+	result, err := tx.Exec(ctx, consumeQuery, now, replacementTokenID, currentTokenID, userID, sessionVersion)
+	if err != nil {
+		return false, fmt.Errorf("consume refresh token: %w", err)
+	}
+	if result.RowsAffected() != 1 {
+		return false, nil
+	}
+
+	const insertQuery = `
+		INSERT INTO refresh_tokens (token_id, user_id, session_version, expires_at)
+		VALUES ($1, $2, $3, $4)
+	`
+
+	if _, err := tx.Exec(ctx, insertQuery, replacementTokenID, userID, sessionVersion, replacementExpiresAt); err != nil {
+		return false, fmt.Errorf("store replacement refresh token: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return false, fmt.Errorf("commit refresh token rotation tx: %w", err)
+	}
+
+	return true, nil
+}

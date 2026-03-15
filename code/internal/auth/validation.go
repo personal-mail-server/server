@@ -2,6 +2,7 @@ package auth
 
 import (
 	"regexp"
+	"strings"
 	"unicode"
 	"unicode/utf8"
 )
@@ -28,7 +29,7 @@ func ValidateLoginRequest(req LoginRequest) *AppError {
 		if unicode.IsSpace(r) {
 			return NewBadRequest(CodeInvalidPassword)
 		}
-		if unicode.IsLetter(r) {
+		if isASCIILetter(r) {
 			hasLetter = true
 		}
 		if unicode.IsDigit(r) {
@@ -41,4 +42,16 @@ func ValidateLoginRequest(req LoginRequest) *AppError {
 	}
 
 	return nil
+}
+
+func ValidateReissueRequest(req ReissueRequest) *AppError {
+	if strings.TrimSpace(req.RefreshToken) == "" {
+		return NewBadRequest(CodeMissingRequired)
+	}
+
+	return nil
+}
+
+func isASCIILetter(r rune) bool {
+	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z')
 }

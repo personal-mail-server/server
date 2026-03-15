@@ -31,7 +31,7 @@
   - role: persistent auth state storage
 - backend:
   - runtime: compiled Go binary
-  - role: login API, logout API, OpenAPI file, Swagger page, health check
+  - role: login API, logout API, token reissue API, OpenAPI file, Swagger page, health check
 - frontend:
   - runtime: nginx
   - role: auth page with login/logout interaction and reverse proxy to backend `/api` and `/docs`
@@ -46,8 +46,10 @@
 - implemented_feature:
   - login
   - logout
+  - token reissue
 - token_model: access + refresh
 - logout_invalidation: session versioning
+- refresh_rotation: persisted refresh-token `jti` with one-time consume-and-replace
 - lock_policy: 5 failures -> 10 minute lock
 - seed_user:
   - loginId: `user-01`
