@@ -33,7 +33,6 @@
   - Swagger 접근 확인
   - 로그인 API 성공/실패/잠금 흐름 확인
   - 로그아웃 API 성공/무효 세션 흐름 확인
-  - 토큰 재발급 API 성공/재사용 차단 흐름 확인
   - GitHub Actions CI 워크플로 검증
   - PUSH 자동화 CLI 단위 테스트
 
@@ -104,8 +103,6 @@
 - `POST /api/v1/auth/login` 성공 응답 확인
 - `POST /api/v1/auth/logout` 성공 응답 확인
 - 동일 액세스 토큰 재사용 시 `401 Unauthorized` 확인
-- `POST /api/v1/auth/token/reissue` 성공 응답 확인
-- 동일 리프레시 토큰 재사용 시 `401 Unauthorized` 확인
 - 잘못된 비밀번호 반복 시 잠금 정책이 실제 응답 코드에 반영되는지 확인
 
 ---
@@ -130,7 +127,7 @@ make down
 - GitHub Actions 워크플로 파일: `.github/workflows/ci.yml`
 - 현재 CI 검증 범위:
   - `go test ./...`
-  - `go build ./cmd/server`
+  - `go build ./...`
   - `go vet ./...`
   - `make up` / `make status` / `make down`
   - 로그인 화면 응답 확인
@@ -138,7 +135,6 @@ make down
   - OpenAPI YAML 응답 확인
   - 로그인 성공 시나리오 확인
   - 로그아웃 성공 및 재요청 차단 시나리오 확인
-  - 토큰 재발급 성공 및 동일 토큰 재사용 차단 시나리오 확인
   - 5회째 잠금 시나리오 확인
   - 잠금 이후 정상 비밀번호 차단 확인
 
@@ -172,6 +168,7 @@ make down
 - 같은 액세스 토큰으로 재요청 시 `401 Unauthorized` 확인
 
 ### 토큰 재발급 확인
+- 현재 저장소 기준 자동 실행 검증이 아니라 수동 검증 기준으로 관리한다.
 - 정상 로그인으로 리프레시 토큰 발급
 - `POST /api/v1/auth/token/reissue`에 `refreshToken` 전송
 - 첫 요청은 `200 OK`와 새 토큰 필드 확인

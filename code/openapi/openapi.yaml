@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Personal Mail Server Auth API
   version: 0.1.0
-  description: Login and logout sync slice contract
+  description: Login, logout, and token reissue auth slice contract
 servers:
   - url: /
 paths:
@@ -203,6 +203,7 @@ components:
         refreshToken:
           type: string
           minLength: 1
+          pattern: '.*\S.*'
     ErrorResponse:
       type: object
       required:

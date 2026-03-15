@@ -62,15 +62,14 @@
 - access_token_invalidation: session versioning
 
 ## implementation_gap
-- refresh-token reissue flow is still not implemented
 - dedicated protected API validation middleware is still not implemented
 
 ## frontend_status
 - current root page includes logout entry after successful login
 - logout action should live in authenticated screens only
 - logout action placement: user menu
-- successful logout must clear client auth state and return to `/`
-- auth failure should also clear client auth state and return to `/`
+- successful logout must clear client auth state and return to the logged-out root-page state at `/`
+- auth failure should also clear client auth state and return to the logged-out root-page state at `/`
 
 ## verification_checkpoints
 - authenticated logout succeeds
