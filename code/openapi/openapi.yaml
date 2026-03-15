@@ -100,6 +100,56 @@ paths:
               example:
                 code: INTERNAL_SERVER_ERROR
                 message: 요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요.
+  /api/v1/auth/token/reissue:
+    post:
+      summary: 토큰 재발급
+      description: 유효한 리프레시 토큰을 검증하고 새 액세스 토큰과 새 리프레시 토큰을 발급한다.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReissueRequest'
+      responses:
+        '200':
+          description: 토큰 재발급 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginSuccessResponse'
+        '400':
+          description: 요청 형식 또는 입력값 검증 실패
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidBody:
+                  value:
+                    code: INVALID_REQUEST_BODY
+                    message: 입력값 형식이 올바르지 않습니다.
+                missingField:
+                  value:
+                    code: MISSING_REQUIRED_FIELD
+                    message: 입력값 형식이 올바르지 않습니다.
+        '401':
+          description: 리프레시 토큰 검증 실패 또는 무효 세션
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INVALID_REFRESH_TOKEN
+                message: 인증 정보가 유효하지 않습니다. 다시 로그인해 주세요.
+        '500':
+          description: 서버 내부 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_SERVER_ERROR
+                message: 요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요.
 components:
   securitySchemes:
     bearerAuth:
@@ -145,6 +195,14 @@ components:
         tokenType:
           type: string
           enum: [Bearer]
+    ReissueRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          minLength: 1
     ErrorResponse:
       type: object
       required:

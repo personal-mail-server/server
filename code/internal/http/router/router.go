@@ -18,4 +18,5 @@ func Register(e *echo.Echo, authHandler *handlers.AuthHandler) {
 	authGroup := v1.Group("/auth")
 	authGroup.POST("/login", authHandler.Login)
 	authGroup.POST("/logout", authHandler.Logout)
+	authGroup.POST("/token/reissue", authHandler.Reissue)
 }

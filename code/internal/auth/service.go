@@ -71,14 +71,71 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) (*LoginResponse, 
 		return nil, NewInternalServerError()
 	}
 
-	accessToken, refreshToken, err := s.issuer.IssuePair(now, user.LoginID, user.SessionVersion)
+	refreshTokenID, err := NewRefreshTokenID()
 	if err != nil {
 		return nil, NewInternalServerError()
 	}
 
+	pair, err := s.issuer.IssuePair(now, user.LoginID, user.SessionVersion, refreshTokenID)
+	if err != nil {
+		return nil, NewInternalServerError()
+	}
+	if err := s.repo.StoreRefreshToken(ctx, user.ID, pair.RefreshTokenID, user.SessionVersion, pair.RefreshTokenExpiresAt); err != nil {
+		return nil, NewInternalServerError()
+	}
+
 	return &LoginResponse{
-		AccessToken:           accessToken,
-		RefreshToken:          refreshToken,
+		AccessToken:           pair.AccessToken,
+		RefreshToken:          pair.RefreshToken,
+		AccessTokenExpiresIn:  AccessTokenExpiresInSeconds,
+		RefreshTokenExpiresIn: RefreshTokenExpiresInSeconds,
+		TokenType:             TokenTypeBearer,
+	}, nil
+}
+
+func (s *Service) Reissue(ctx context.Context, req ReissueRequest) (*LoginResponse, *AppError) {
+	if validationErr := ValidateReissueRequest(req); validationErr != nil {
+		return nil, validationErr
+	}
+
+	claims, err := s.issuer.VerifyRefreshToken(req.RefreshToken)
+	if err != nil {
+		return nil, NewInvalidRefreshToken()
+	}
+
+	user, repoErr := s.repo.FindByLoginID(ctx, claims.Subject)
+	if repoErr != nil {
+		if errors.Is(repoErr, ErrUserNotFound) {
+			return nil, NewInvalidRefreshToken()
+		}
+		return nil, NewInternalServerError()
+	}
+	if user.SessionVersion != claims.SessionVersion {
+		return nil, NewInvalidRefreshToken()
+	}
+
+	now := s.clock.Now()
+	replacementTokenID, err := NewRefreshTokenID()
+	if err != nil {
+		return nil, NewInternalServerError()
+	}
+
+	pair, err := s.issuer.IssuePair(now, user.LoginID, user.SessionVersion, replacementTokenID)
+	if err != nil {
+		return nil, NewInternalServerError()
+	}
+
+	rotated, err := s.repo.ConsumeRefreshTokenAndStoreReplacement(ctx, user.ID, claims.ID, pair.RefreshTokenID, user.SessionVersion, now, pair.RefreshTokenExpiresAt)
+	if err != nil {
+		return nil, NewInternalServerError()
+	}
+	if !rotated {
+		return nil, NewInvalidRefreshToken()
+	}
+
+	return &LoginResponse{
+		AccessToken:           pair.AccessToken,
+		RefreshToken:          pair.RefreshToken,
 		AccessTokenExpiresIn:  AccessTokenExpiresInSeconds,
 		RefreshTokenExpiresIn: RefreshTokenExpiresInSeconds,
 		TokenType:             TokenTypeBearer,

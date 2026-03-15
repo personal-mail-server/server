@@ -16,16 +16,23 @@ type fakeClock struct {
 func (f fakeClock) Now() time.Time { return f.now }
 
 type fakeIssuer struct {
-	verifyClaims      *AuthTokenClaims
-	verifyErr         error
-	lastIssuedLoginID string
-	lastIssuedVersion int
+	verifyClaims             *AuthTokenClaims
+	verifyErr                error
+	lastIssuedLoginID        string
+	lastIssuedVersion        int
+	lastIssuedRefreshTokenID string
 }
 
-func (f *fakeIssuer) IssuePair(_ time.Time, loginID string, sessionVersion int) (string, string, error) {
+func (f *fakeIssuer) IssuePair(_ time.Time, loginID string, sessionVersion int, refreshTokenID string) (*IssuedTokenPair, error) {
 	f.lastIssuedLoginID = loginID
 	f.lastIssuedVersion = sessionVersion
-	return "access-token", "refresh-token", nil
+	f.lastIssuedRefreshTokenID = refreshTokenID
+	return &IssuedTokenPair{
+		AccessToken:           "access-token",
+		RefreshToken:          "refresh-token",
+		RefreshTokenID:        refreshTokenID,
+		RefreshTokenExpiresAt: time.Date(2026, 3, 21, 0, 0, 0, 0, time.UTC),
+	}, nil
 }
 
 func (f *fakeIssuer) VerifyAccessToken(_ string) (*AuthTokenClaims, error) {
@@ -38,12 +45,34 @@ func (f *fakeIssuer) VerifyAccessToken(_ string) (*AuthTokenClaims, error) {
 	return f.verifyClaims, nil
 }
 
+func (f *fakeIssuer) VerifyRefreshToken(_ string) (*AuthTokenClaims, error) {
+	if f.verifyErr != nil {
+		return nil, f.verifyErr
+	}
+	if f.verifyClaims == nil {
+		return nil, ErrInvalidToken
+	}
+	return f.verifyClaims, nil
+}
+
+type refreshTokenRecord struct {
+	userID         int64
+	sessionVersion int
+	expiresAt      time.Time
+	usedAt         *time.Time
+	replacedBy     string
+}
+
 type memoryRepo struct {
-	users map[string]*User
+	users             map[string]*User
+	refreshTokens     map[string]refreshTokenRecord
+	lastStoredTokenID string
+	lastStoredUserID  int64
+	lastStoredVersion int
 }
 
 func newMemoryRepo() *memoryRepo {
-	return &memoryRepo{users: map[string]*User{}}
+	return &memoryRepo{users: map[string]*User{}, refreshTokens: map[string]refreshTokenRecord{}}
 }
 
 func (m *memoryRepo) FindByLoginID(_ context.Context, loginID string) (*User, error) {
@@ -80,6 +109,42 @@ func (m *memoryRepo) ResetFailures(_ context.Context, userID int64) error {
 	return errors.New("user not found")
 }
 
+func (m *memoryRepo) IncrementSessionVersion(_ context.Context, userID int64, currentVersion int) (bool, error) {
+	for _, user := range m.users {
+		if user.ID == userID {
+			if user.SessionVersion != currentVersion {
+				return false, nil
+			}
+			user.SessionVersion++
+			return true, nil
+		}
+	}
+	return false, errors.New("user not found")
+}
+
+func (m *memoryRepo) StoreRefreshToken(_ context.Context, userID int64, tokenID string, sessionVersion int, expiresAt time.Time) error {
+	m.refreshTokens[tokenID] = refreshTokenRecord{userID: userID, sessionVersion: sessionVersion, expiresAt: expiresAt}
+	m.lastStoredTokenID = tokenID
+	m.lastStoredUserID = userID
+	m.lastStoredVersion = sessionVersion
+	return nil
+}
+
+func (m *memoryRepo) ConsumeRefreshTokenAndStoreReplacement(_ context.Context, userID int64, currentTokenID, replacementTokenID string, sessionVersion int, now, replacementExpiresAt time.Time) (bool, error) {
+	record, ok := m.refreshTokens[currentTokenID]
+	if !ok {
+		return false, nil
+	}
+	if record.userID != userID || record.sessionVersion != sessionVersion || record.usedAt != nil || !record.expiresAt.After(now) {
+		return false, nil
+	}
+	record.usedAt = &now
+	record.replacedBy = replacementTokenID
+	m.refreshTokens[currentTokenID] = record
+	m.refreshTokens[replacementTokenID] = refreshTokenRecord{userID: userID, sessionVersion: sessionVersion, expiresAt: replacementExpiresAt}
+	return true, nil
+}
+
 func TestLoginSuccessResetsFailures(t *testing.T) {
 	hash, err := HashPassword("pass1234")
 	if err != nil {
@@ -103,6 +168,12 @@ func TestLoginSuccessResetsFailures(t *testing.T) {
 	}
 	if issuer.lastIssuedLoginID != "user-1" || issuer.lastIssuedVersion != 3 {
 		t.Fatalf("expected issuer to receive current session version, got loginID=%s version=%d", issuer.lastIssuedLoginID, issuer.lastIssuedVersion)
+	}
+	if issuer.lastIssuedRefreshTokenID == "" {
+		t.Fatalf("expected refresh token id to be generated")
+	}
+	if repo.lastStoredTokenID != issuer.lastIssuedRefreshTokenID || repo.lastStoredUserID != 1 || repo.lastStoredVersion != 3 {
+		t.Fatalf("expected refresh token state to be stored for login")
 	}
 
 	stored := repo.users["user-1"]
@@ -169,19 +240,6 @@ func TestLoginBlockedDuringLockAndAllowedAfterUnlock(t *testing.T) {
 	}
 }
 
-func (m *memoryRepo) IncrementSessionVersion(_ context.Context, userID int64, currentVersion int) (bool, error) {
-	for _, user := range m.users {
-		if user.ID == userID {
-			if user.SessionVersion != currentVersion {
-				return false, nil
-			}
-			user.SessionVersion++
-			return true, nil
-		}
-	}
-	return false, errors.New("user not found")
-}
-
 func TestLogoutSuccessIncrementsSessionVersion(t *testing.T) {
 	repo := newMemoryRepo()
 	repo.users["user-4"] = &User{ID: 4, LoginID: "user-4", SessionVersion: 2}
@@ -220,6 +278,69 @@ func TestLogoutRejectsRevokedSessionVersion(t *testing.T) {
 	}
 }
 
+func TestReissueSuccessRotatesRefreshToken(t *testing.T) {
+	repo := newMemoryRepo()
+	repo.users["user-6"] = &User{ID: 6, LoginID: "user-6", SessionVersion: 4}
+	repo.refreshTokens["old-refresh-id"] = refreshTokenRecord{userID: 6, sessionVersion: 4, expiresAt: time.Date(2026, 3, 21, 0, 0, 0, 0, time.UTC)}
+	issuer := &fakeIssuer{verifyClaims: &AuthTokenClaims{TokenUse: TokenUseRefresh, SessionVersion: 4, RegisteredClaims: registeredClaimsForRefresh("user-6", "old-refresh-id")}}
+	service := NewService(repo, issuer, fakeClock{now: time.Date(2026, 3, 14, 0, 0, 0, 0, time.UTC)})
+
+	resp, appErr := service.Reissue(context.Background(), ReissueRequest{RefreshToken: "refresh-token"})
+	if appErr != nil {
+		t.Fatalf("expected success, got %+v", appErr)
+	}
+	if resp.AccessToken == "" || resp.RefreshToken == "" {
+		t.Fatalf("expected token pair on reissue")
+	}
+	oldRecord := repo.refreshTokens["old-refresh-id"]
+	if oldRecord.usedAt == nil || oldRecord.replacedBy == "" {
+		t.Fatalf("expected old refresh token to be consumed and replaced")
+	}
+	if _, ok := repo.refreshTokens[oldRecord.replacedBy]; !ok {
+		t.Fatalf("expected replacement refresh token to be stored")
+	}
+}
+
+func TestReissueRejectsInvalidRefreshToken(t *testing.T) {
+	service := NewService(newMemoryRepo(), &fakeIssuer{verifyErr: ErrInvalidToken}, fakeClock{now: time.Now().UTC()})
+
+	_, appErr := service.Reissue(context.Background(), ReissueRequest{RefreshToken: "bad-token"})
+	if appErr == nil || appErr.Status != 401 || appErr.Code != CodeInvalidRefreshToken {
+		t.Fatalf("expected 401 INVALID_REFRESH_TOKEN, got %+v", appErr)
+	}
+}
+
+func TestReissueRejectsStaleSessionVersion(t *testing.T) {
+	repo := newMemoryRepo()
+	repo.users["user-7"] = &User{ID: 7, LoginID: "user-7", SessionVersion: 5}
+	issuer := &fakeIssuer{verifyClaims: &AuthTokenClaims{TokenUse: TokenUseRefresh, SessionVersion: 4, RegisteredClaims: registeredClaimsForRefresh("user-7", "refresh-id")}}
+	service := NewService(repo, issuer, fakeClock{now: time.Now().UTC()})
+
+	_, appErr := service.Reissue(context.Background(), ReissueRequest{RefreshToken: "stale-token"})
+	if appErr == nil || appErr.Status != 401 || appErr.Code != CodeInvalidRefreshToken {
+		t.Fatalf("expected 401 INVALID_REFRESH_TOKEN, got %+v", appErr)
+	}
+}
+
+func TestReissueRejectsReusedRefreshToken(t *testing.T) {
+	now := time.Date(2026, 3, 14, 0, 0, 0, 0, time.UTC)
+	repo := newMemoryRepo()
+	repo.users["user-8"] = &User{ID: 8, LoginID: "user-8", SessionVersion: 2}
+	reusedAt := now.Add(-time.Minute)
+	repo.refreshTokens["used-refresh-id"] = refreshTokenRecord{userID: 8, sessionVersion: 2, expiresAt: now.Add(time.Hour), usedAt: &reusedAt}
+	issuer := &fakeIssuer{verifyClaims: &AuthTokenClaims{TokenUse: TokenUseRefresh, SessionVersion: 2, RegisteredClaims: registeredClaimsForRefresh("user-8", "used-refresh-id")}}
+	service := NewService(repo, issuer, fakeClock{now: now})
+
+	_, appErr := service.Reissue(context.Background(), ReissueRequest{RefreshToken: "used-token"})
+	if appErr == nil || appErr.Status != 401 || appErr.Code != CodeInvalidRefreshToken {
+		t.Fatalf("expected 401 INVALID_REFRESH_TOKEN, got %+v", appErr)
+	}
+}
+
 func registeredClaimsForSubject(subject string) jwt.RegisteredClaims {
 	return jwt.RegisteredClaims{Subject: subject}
+}
+
+func registeredClaimsForRefresh(subject, tokenID string) jwt.RegisteredClaims {
+	return jwt.RegisteredClaims{Subject: subject, ID: tokenID}
 }

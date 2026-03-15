@@ -63,11 +63,48 @@ func TestValidateLoginRequest(t *testing.T) {
 			},
 			wantError: CodeInvalidPassword,
 		},
+		{
+			name: "password has non ascii letter",
+			req: LoginRequest{
+				LoginID:  "user-01",
+				Password: "한글12345",
+			},
+			wantError: CodeInvalidPassword,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateLoginRequest(tt.req)
+			if tt.wantError == "" && err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+			if tt.wantError != "" {
+				if err == nil {
+					t.Fatalf("expected error %q, got nil", tt.wantError)
+				}
+				if err.Code != tt.wantError {
+					t.Fatalf("expected error code %q, got %q", tt.wantError, err.Code)
+				}
+			}
+		})
+	}
+}
+
+func TestValidateReissueRequest(t *testing.T) {
+	tests := []struct {
+		name      string
+		req       ReissueRequest
+		wantError string
+	}{
+		{name: "valid request", req: ReissueRequest{RefreshToken: "refresh-token"}},
+		{name: "missing refresh token", req: ReissueRequest{}, wantError: CodeMissingRequired},
+		{name: "blank refresh token", req: ReissueRequest{RefreshToken: "   "}, wantError: CodeMissingRequired},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateReissueRequest(tt.req)
 			if tt.wantError == "" && err != nil {
 				t.Fatalf("expected no error, got %v", err)
 			}
