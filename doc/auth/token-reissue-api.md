@@ -70,6 +70,7 @@
 - 요청 본문이 JSON 형식이 아니면 요청은 실패해야 한다.
 - `refreshToken`이 누락되면 요청은 실패해야 한다.
 - `refreshToken`이 문자열이 아니면 요청은 실패해야 한다.
+- 공백만 있는 `refreshToken`은 요청 실패로 처리해야 한다.
 - 액세스 토큰이나 기타 토큰을 `refreshToken` 자리에 제출하면 요청은 실패해야 한다.
 
 ---
@@ -138,13 +139,12 @@
 에러 코드 예시:
 - `INVALID_REQUEST_BODY`
 - `MISSING_REQUIRED_FIELD`
-- `INVALID_REFRESH_TOKEN_FORMAT`
 
 응답 예시:
 ```json
 {
   "code": "MISSING_REQUIRED_FIELD",
-  "message": "필수 입력값이 누락되었습니다."
+  "message": "입력값 형식이 올바르지 않습니다."
 }
 ```
 

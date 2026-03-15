@@ -31,9 +31,12 @@
   - openapi yaml route check
   - login success/failure/lock verification
   - logout success and token reuse rejection verification
-  - token reissue success and refresh-token reuse rejection verification
   - github actions ci workflow verification
   - push-trigger unit test verification
+
+## manual_verification_notes
+- token reissue flow is currently tracked as a manual verification scenario, not a persisted CI or docker-smoke check
+- automated coverage for token reissue currently exists at unit-test level in auth service and handler tests
 
 
 ## current_gaps
