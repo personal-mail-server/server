@@ -6,7 +6,7 @@ import (
 	"personal-mail-server/internal/http/handlers"
 )
 
-func Register(e *echo.Echo, authHandler *handlers.AuthHandler) {
+func Register(e *echo.Echo, authHandler *handlers.AuthHandler, testAddressHandler *handlers.TestAddressHandler) {
 	e.GET("/healthz", func(c echo.Context) error {
 		return c.NoContent(204)
 	})
@@ -19,4 +19,6 @@ func Register(e *echo.Echo, authHandler *handlers.AuthHandler) {
 	authGroup.POST("/login", authHandler.Login)
 	authGroup.POST("/logout", authHandler.Logout)
 	authGroup.POST("/token/reissue", authHandler.Reissue)
+	testAddressGroup := v1.Group("/test-addresses")
+	testAddressGroup.POST("/generate", testAddressHandler.GenerateCandidate)
 }

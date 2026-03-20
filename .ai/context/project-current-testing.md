@@ -22,6 +22,7 @@
   - token reissue service and handler tests
   - migration utility tests for discovery and down-path derivation
   - test mail address repository tests for create/read/list/update-delete behaviors
+  - test mail address candidate generation service and handler tests
 - execution_checks:
   - `go test ./...`
   - `go build ./...`
@@ -59,6 +60,10 @@
   - active-owner listing
   - soft delete behavior
   - not-found mapping
+- candidate_api_tests_exist: true
+- candidate_api_paths:
+  - `code/internal/testaddress/service_test.go`
+  - `code/internal/http/handlers/testaddress_handler_test.go`
 
 ## ci_status
 - workflow_exists: true

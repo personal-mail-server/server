@@ -14,6 +14,7 @@ import (
 	"personal-mail-server/internal/db"
 	"personal-mail-server/internal/http/handlers"
 	"personal-mail-server/internal/http/router"
+	"personal-mail-server/internal/testaddress"
 )
 
 type Server struct {
@@ -37,9 +38,12 @@ func NewServer(cfg config.Config) (*Server, error) {
 	}
 
 	issuer := auth.NewJWTIssuer(cfg.AccessTokenSecret, cfg.RefreshTokenSecret)
-	repo := auth.NewPostgresRepository(pool)
-	service := auth.NewService(repo, issuer, auth.RealClock{})
-	authHandler := handlers.NewAuthHandler(service)
+	authRepo := auth.NewPostgresRepository(pool)
+	authService := auth.NewService(authRepo, issuer, auth.RealClock{})
+	authHandler := handlers.NewAuthHandler(authService)
+	testAddressRepo := testaddress.NewPostgresRepository(pool)
+	testAddressService := testaddress.NewService(testAddressRepo, authRepo, issuer)
+	testAddressHandler := handlers.NewTestAddressHandler(testAddressService)
 
 	e := echo.New()
 	e.HideBanner = true
@@ -57,7 +61,7 @@ func NewServer(cfg config.Config) (*Server, error) {
 		}))
 	}
 
-	router.Register(e, authHandler)
+	router.Register(e, authHandler, testAddressHandler)
 
 	server := &http.Server{
 		Addr:              fmt.Sprintf(":%d", cfg.Port),
