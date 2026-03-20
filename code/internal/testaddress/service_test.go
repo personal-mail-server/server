@@ -136,8 +136,24 @@ func (m *memoryRepo) ListByOwner(_ context.Context, ownerID int64) ([]TestMailAd
 	return result, nil
 }
 
-func (m *memoryRepo) Update(context.Context, TestMailAddress) (*TestMailAddress, error) {
-	panic("not used")
+func (m *memoryRepo) Update(_ context.Context, address TestMailAddress) (*TestMailAddress, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	current, ok := m.byID[address.ID]
+	if !ok || current.DeletedAt != nil {
+		return nil, ErrTestMailAddressNotFound
+	}
+	if existing, exists := m.byEmail[address.Email]; exists && existing.ID != address.ID {
+		return nil, ErrDuplicateEmail
+	}
+	delete(m.byEmail, current.Email)
+	current.Email = address.Email
+	current.UpdatedAt = time.Date(2026, 3, 20, 2, 0, 0, 0, time.UTC)
+	m.byEmail[current.Email] = current
+	m.byID[current.ID] = current
+	copy := current
+	return &copy, nil
 }
 
 func (m *memoryRepo) SoftDelete(context.Context, int64, time.Time) error { panic("not used") }
@@ -281,6 +297,70 @@ func TestGetByIDReturnsNotFoundForNonOwner(t *testing.T) {
 	service := newService(repo, users, issuer, nil)
 
 	_, appErr := service.GetByID(context.Background(), "valid-token", "11")
+	if appErr == nil || appErr.Status != 404 {
+		t.Fatalf("expected not found, got %+v", appErr)
+	}
+}
+
+func TestUpdateSucceedsWhenKeepingSameEmail(t *testing.T) {
+	repo := &memoryRepo{
+		byEmail: map[string]TestMailAddress{"same@mail.local": {ID: 8, OwnerUserID: 3, Email: "same@mail.local"}},
+		byID:    map[int64]TestMailAddress{8: {ID: 8, OwnerUserID: 3, Email: "same@mail.local"}},
+	}
+	issuer := fakeTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}}
+	users := fakeUserReader{user: &auth.User{ID: 3, LoginID: "user-01", SessionVersion: 1}}
+	service := newService(repo, users, issuer, nil)
+
+	resp, appErr := service.Update(context.Background(), "valid-token", "8", UpdateRequest{Email: "same@mail.local"})
+	if appErr != nil {
+		t.Fatalf("expected success, got %+v", appErr)
+	}
+	if resp.Email != "same@mail.local" {
+		t.Fatalf("unexpected response: %+v", resp)
+	}
+}
+
+func TestUpdateRejectsDuplicateEmailFromAnotherResource(t *testing.T) {
+	repo := &memoryRepo{
+		byEmail: map[string]TestMailAddress{
+			"own@mail.local":   {ID: 8, OwnerUserID: 3, Email: "own@mail.local"},
+			"other@mail.local": {ID: 9, OwnerUserID: 3, Email: "other@mail.local"},
+		},
+		byID: map[int64]TestMailAddress{
+			8: {ID: 8, OwnerUserID: 3, Email: "own@mail.local"},
+			9: {ID: 9, OwnerUserID: 3, Email: "other@mail.local"},
+		},
+	}
+	issuer := fakeTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}}
+	users := fakeUserReader{user: &auth.User{ID: 3, LoginID: "user-01", SessionVersion: 1}}
+	service := newService(repo, users, issuer, nil)
+
+	_, appErr := service.Update(context.Background(), "valid-token", "8", UpdateRequest{Email: "other@mail.local"})
+	if appErr == nil || appErr.Status != 409 || appErr.Code != auth.CodeDuplicateEmail {
+		t.Fatalf("expected duplicate conflict, got %+v", appErr)
+	}
+}
+
+func TestUpdateRejectsNonOwnerAsNotFound(t *testing.T) {
+	repo := &memoryRepo{byID: map[int64]TestMailAddress{8: {ID: 8, OwnerUserID: 99, Email: "hidden@mail.local"}}}
+	issuer := fakeTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}}
+	users := fakeUserReader{user: &auth.User{ID: 3, LoginID: "user-01", SessionVersion: 1}}
+	service := newService(repo, users, issuer, nil)
+
+	_, appErr := service.Update(context.Background(), "valid-token", "8", UpdateRequest{Email: "new@mail.local"})
+	if appErr == nil || appErr.Status != 404 {
+		t.Fatalf("expected not found, got %+v", appErr)
+	}
+}
+
+func TestUpdateRejectsDeletedResourceAsNotFound(t *testing.T) {
+	deletedAt := time.Date(2026, 3, 20, 3, 0, 0, 0, time.UTC)
+	repo := &memoryRepo{byID: map[int64]TestMailAddress{8: {ID: 8, OwnerUserID: 3, Email: "gone@mail.local", DeletedAt: &deletedAt}}}
+	issuer := fakeTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}}
+	users := fakeUserReader{user: &auth.User{ID: 3, LoginID: "user-01", SessionVersion: 1}}
+	service := newService(repo, users, issuer, nil)
+
+	_, appErr := service.Update(context.Background(), "valid-token", "8", UpdateRequest{Email: "new@mail.local"})
 	if appErr == nil || appErr.Status != 404 {
 		t.Fatalf("expected not found, got %+v", appErr)
 	}

@@ -69,8 +69,9 @@
   - test mail address candidate generation API
   - test mail address create API
   - test mail address list/detail read APIs
+  - test mail address update API
 - not_yet_implemented:
-  - test mail address update/delete APIs
+  - test mail address delete API
   - test mail address frontend UI
 
 ## sync_note

@@ -18,6 +18,10 @@ type CreateRequest struct {
 	Email string `json:"email"`
 }
 
+type UpdateRequest struct {
+	Email string `json:"email"`
+}
+
 type Response struct {
 	ID          int64      `json:"id"`
 	OwnerUserID int64      `json:"ownerUserId"`

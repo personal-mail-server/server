@@ -157,6 +157,60 @@ func (s *Service) GetByID(ctx context.Context, rawAccessToken string, rawID stri
 	return NewResponse(address), nil
 }
 
+func (s *Service) Update(ctx context.Context, rawAccessToken string, rawID string, req UpdateRequest) (*Response, *auth.AppError) {
+	if validationErr := ValidateUpdateRequest(req); validationErr != nil {
+		return nil, validationErr
+	}
+
+	user, appErr := s.authenticateUser(ctx, rawAccessToken)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	id, err := strconv.ParseInt(rawID, 10, 64)
+	if err != nil || id <= 0 {
+		return nil, auth.NewNotFound()
+	}
+
+	current, repoErr := s.repo.GetByID(ctx, id)
+	if repoErr != nil {
+		if errors.Is(repoErr, ErrTestMailAddressNotFound) {
+			return nil, auth.NewNotFound()
+		}
+		return nil, auth.NewInternalServerError()
+	}
+	if current.OwnerUserID != user.ID {
+		return nil, auth.NewNotFound()
+	}
+
+	if req.Email != current.Email {
+		_, findErr := s.repo.GetByEmail(ctx, req.Email)
+		if findErr == nil {
+			return nil, auth.NewConflict(auth.CodeDuplicateEmail, "이미 사용 중인 메일 주소입니다.")
+		}
+		if !errors.Is(findErr, ErrTestMailAddressNotFound) {
+			return nil, auth.NewInternalServerError()
+		}
+	}
+
+	updated, err := s.repo.Update(ctx, TestMailAddress{
+		ID:          current.ID,
+		OwnerUserID: current.OwnerUserID,
+		Email:       req.Email,
+	})
+	if err != nil {
+		if errors.Is(err, ErrTestMailAddressNotFound) {
+			return nil, auth.NewNotFound()
+		}
+		if errors.Is(err, ErrDuplicateEmail) {
+			return nil, auth.NewConflict(auth.CodeDuplicateEmail, "이미 사용 중인 메일 주소입니다.")
+		}
+		return nil, auth.NewInternalServerError()
+	}
+
+	return NewResponse(updated), nil
+}
+
 func (s *Service) authenticateUser(ctx context.Context, rawAccessToken string) (*auth.User, *auth.AppError) {
 	claims, err := s.issuer.VerifyAccessToken(rawAccessToken)
 	if err != nil {

@@ -23,5 +23,6 @@ func Register(e *echo.Echo, authHandler *handlers.AuthHandler, testAddressHandle
 	testAddressGroup.GET("", testAddressHandler.List)
 	testAddressGroup.GET("/:id", testAddressHandler.GetByID)
 	testAddressGroup.POST("", testAddressHandler.Create)
+	testAddressGroup.PUT("/:id", testAddressHandler.Update)
 	testAddressGroup.POST("/generate", testAddressHandler.GenerateCandidate)
 }
