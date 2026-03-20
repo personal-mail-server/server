@@ -13,6 +13,7 @@ const (
 	CodeInvalidRefreshToken = "INVALID_REFRESH_TOKEN"
 	CodeAccountLocked       = "ACCOUNT_LOCKED"
 	CodeDuplicateEmail      = "DUPLICATE_TEST_ADDRESS_EMAIL"
+	CodeNotFound            = "RESOURCE_NOT_FOUND"
 	CodeInternalServerError = "INTERNAL_SERVER_ERROR"
 )
 
@@ -52,4 +53,8 @@ func NewInternalServerError() *AppError {
 
 func NewConflict(code string, message string) *AppError {
 	return &AppError{Status: http.StatusConflict, Code: code, Message: message}
+}
+
+func NewNotFound() *AppError {
+	return &AppError{Status: http.StatusNotFound, Code: CodeNotFound, Message: "요청한 대상을 찾을 수 없습니다."}
 }

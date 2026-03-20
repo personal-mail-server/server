@@ -27,6 +27,10 @@ type Response struct {
 	DeletedAt   *time.Time `json:"deletedAt"`
 }
 
+type ListResponse struct {
+	Addresses []*Response `json:"addresses"`
+}
+
 type Repository interface {
 	Create(ctx context.Context, address TestMailAddress) (*TestMailAddress, error)
 	GetByID(ctx context.Context, id int64) (*TestMailAddress, error)
@@ -48,4 +52,13 @@ func NewResponse(address *TestMailAddress) *Response {
 		UpdatedAt:   address.UpdatedAt,
 		DeletedAt:   address.DeletedAt,
 	}
+}
+
+func NewListResponse(addresses []TestMailAddress) *ListResponse {
+	items := make([]*Response, 0, len(addresses))
+	for i := range addresses {
+		address := addresses[i]
+		items = append(items, NewResponse(&address))
+	}
+	return &ListResponse{Addresses: items}
 }

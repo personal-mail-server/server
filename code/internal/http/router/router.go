@@ -20,6 +20,8 @@ func Register(e *echo.Echo, authHandler *handlers.AuthHandler, testAddressHandle
 	authGroup.POST("/logout", authHandler.Logout)
 	authGroup.POST("/token/reissue", authHandler.Reissue)
 	testAddressGroup := v1.Group("/test-addresses")
+	testAddressGroup.GET("", testAddressHandler.List)
+	testAddressGroup.GET("/:id", testAddressHandler.GetByID)
 	testAddressGroup.POST("", testAddressHandler.Create)
 	testAddressGroup.POST("/generate", testAddressHandler.GenerateCandidate)
 }

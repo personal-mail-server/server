@@ -66,25 +66,20 @@ func (r *testAddressRepo) Create(_ context.Context, address testaddress.TestMail
 		CreatedAt:   time.Date(2026, 3, 20, 0, 0, 0, 0, time.UTC),
 		UpdatedAt:   time.Date(2026, 3, 20, 0, 0, 0, 0, time.UTC),
 	}
-	if r.used == nil {
-		r.used = map[string]testaddress.TestMailAddress{}
-	}
-	if _, ok := r.used[address.Email]; ok {
-		return nil, testaddress.ErrDuplicateEmail
-	}
 	r.used[address.Email] = created
 	return &created, nil
 }
-func (r *testAddressRepo) GetByID(context.Context, int64) (*testaddress.TestMailAddress, error) {
-	panic("not used")
+
+func (r *testAddressRepo) GetByID(_ context.Context, id int64) (*testaddress.TestMailAddress, error) {
+	for _, address := range r.used {
+		if address.ID == id {
+			copy := address
+			return &copy, nil
+		}
+	}
+	return nil, testaddress.ErrTestMailAddressNotFound
 }
-func (r *testAddressRepo) ListByOwner(context.Context, int64) ([]testaddress.TestMailAddress, error) {
-	panic("not used")
-}
-func (r *testAddressRepo) Update(context.Context, testaddress.TestMailAddress) (*testaddress.TestMailAddress, error) {
-	panic("not used")
-}
-func (r *testAddressRepo) SoftDelete(context.Context, int64, time.Time) error { panic("not used") }
+
 func (r *testAddressRepo) GetByEmail(_ context.Context, email string) (*testaddress.TestMailAddress, error) {
 	if address, ok := r.used[email]; ok {
 		copy := address
@@ -93,23 +88,21 @@ func (r *testAddressRepo) GetByEmail(_ context.Context, email string) (*testaddr
 	return nil, testaddress.ErrTestMailAddressNotFound
 }
 
-type fixedCandidateGenerator struct{ email string }
+func (r *testAddressRepo) ListByOwner(_ context.Context, ownerID int64) ([]testaddress.TestMailAddress, error) {
+	result := make([]testaddress.TestMailAddress, 0)
+	for _, address := range r.used {
+		if address.OwnerUserID == ownerID && address.DeletedAt == nil {
+			result = append(result, address)
+		}
+	}
+	return result, nil
+}
 
-func (g fixedCandidateGenerator) Next() (string, error) { return g.email, nil }
-
-type failingTokenIssuer struct{}
-
-func (failingTokenIssuer) IssuePair(_ time.Time, _ string, _ int, _ string) (*auth.IssuedTokenPair, error) {
+func (r *testAddressRepo) Update(context.Context, testaddress.TestMailAddress) (*testaddress.TestMailAddress, error) {
 	panic("not used")
 }
 
-func (failingTokenIssuer) VerifyAccessToken(_ string) (*auth.AuthTokenClaims, error) {
-	return nil, auth.ErrInvalidToken
-}
-
-func (failingTokenIssuer) VerifyRefreshToken(_ string) (*auth.AuthTokenClaims, error) {
-	panic("not used")
-}
+func (r *testAddressRepo) SoftDelete(context.Context, int64, time.Time) error { panic("not used") }
 
 func TestTestAddressHandlerGenerateCandidateMissingAuthorization(t *testing.T) {
 	e := echo.New()
@@ -216,5 +209,79 @@ func TestTestAddressHandlerCreateDuplicateEmail(t *testing.T) {
 	}
 	if rec.Code != http.StatusConflict {
 		t.Fatalf("expected status 409, got %d", rec.Code)
+	}
+}
+
+func TestTestAddressHandlerListSuccess(t *testing.T) {
+	e := echo.New()
+	service := testaddress.NewService(&testAddressRepo{used: map[string]testaddress.TestMailAddress{
+		"one@mail.local":   {ID: 1, OwnerUserID: 1, Email: "one@mail.local"},
+		"two@mail.local":   {ID: 2, OwnerUserID: 1, Email: "two@mail.local"},
+		"other@mail.local": {ID: 3, OwnerUserID: 2, Email: "other@mail.local"},
+	}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
+	h := NewTestAddressHandler(service)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/test-addresses", nil)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	if err := h.List(c); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+
+	var body testaddress.ListResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("unmarshal response: %v", err)
+	}
+	if len(body.Addresses) != 2 {
+		t.Fatalf("expected 2 addresses, got %+v", body)
+	}
+}
+
+func TestTestAddressHandlerGetByIDSuccess(t *testing.T) {
+	e := echo.New()
+	service := testaddress.NewService(&testAddressRepo{used: map[string]testaddress.TestMailAddress{
+		"owned@mail.local": {ID: 11, OwnerUserID: 1, Email: "owned@mail.local"},
+	}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
+	h := NewTestAddressHandler(service)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/test-addresses/11", nil)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/api/v1/test-addresses/:id")
+	c.SetParamNames("id")
+	c.SetParamValues("11")
+
+	if err := h.GetByID(c); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+}
+
+func TestTestAddressHandlerGetByIDNotFound(t *testing.T) {
+	e := echo.New()
+	service := testaddress.NewService(&testAddressRepo{used: map[string]testaddress.TestMailAddress{}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
+	h := NewTestAddressHandler(service)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/test-addresses/99", nil)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/api/v1/test-addresses/:id")
+	c.SetParamNames("id")
+	c.SetParamValues("99")
+
+	if err := h.GetByID(c); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected status 404, got %d", rec.Code)
 	}
 }
