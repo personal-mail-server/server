@@ -12,9 +12,9 @@
 - `doc/README.md`
 - `doc/project/current-stack.md`
 - `doc/project/current-testing.md`
-- `doc/auth/login.md`
-- `doc/auth/logout.md`
-- `doc/auth/token-reissue.md`
+- `doc/api/v1/auth/login/design.md`
+- `doc/api/v1/auth/logout/design.md`
+- `doc/api/v1/auth/token/reissue/design.md`
 - `TRIGGERS.md`
 
 ## path_note

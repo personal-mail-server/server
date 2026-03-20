@@ -3,18 +3,18 @@
 ## purpose
 - AI-only structured context for token reissue-related source documents.
 - Not an authoritative document.
-- Source of truth remains `doc/auth/token-reissue.md`, `doc/auth/token-reissue-api.md`, and `doc/auth/token-reissue-frontend.md`.
+- Source of truth remains `doc/api/v1/auth/token/reissue/design.md`, `doc/api/v1/auth/token/reissue/backend.md`, and `doc/api/v1/auth/token/reissue/frontend.md`.
 
 ## source_documents
-- `doc/auth/token-reissue.md`
-- `doc/auth/token-reissue-api.md`
-- `doc/auth/token-reissue-frontend.md`
-- `doc/auth/login.md`
-- `doc/auth/login-api.md`
-- `doc/auth/login-frontend.md`
-- `doc/auth/logout.md`
-- `doc/auth/logout-api.md`
-- `doc/auth/logout-frontend.md`
+- `doc/api/v1/auth/token/reissue/design.md`
+- `doc/api/v1/auth/token/reissue/backend.md`
+- `doc/api/v1/auth/token/reissue/frontend.md`
+- `doc/api/v1/auth/login/design.md`
+- `doc/api/v1/auth/login/backend.md`
+- `doc/api/v1/auth/login/frontend.md`
+- `doc/api/v1/auth/logout/design.md`
+- `doc/api/v1/auth/logout/backend.md`
+- `doc/api/v1/auth/logout/frontend.md`
 - `TECH_STACK.md`
 - `TRIGGERS.md`
 
@@ -24,9 +24,9 @@
 - For current local file access, use actual root paths first.
 
 ## document_status
-- token reissue feature design exists: `doc/auth/token-reissue.md`
-- token reissue API spec exists: `doc/auth/token-reissue-api.md`
-- token reissue frontend behavior doc exists: `doc/auth/token-reissue-frontend.md`
+- token reissue feature design exists: `doc/api/v1/auth/token/reissue/design.md`
+- token reissue API spec exists: `doc/api/v1/auth/token/reissue/backend.md`
+- token reissue frontend behavior doc exists: `doc/api/v1/auth/token/reissue/frontend.md`
 - current codebase now exposes a documented token reissue endpoint and persists refresh-token state for rotation
 
 ## current_constraints

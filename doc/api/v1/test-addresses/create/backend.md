@@ -6,10 +6,10 @@
 ---
 
 ## 기준 문서
-- `doc/mail/server-requirements.md`
-- `doc/mail/pr-split/03-create-api.md`
-- `doc/mail/test-address-model.md`
-- `doc/mail/test-address-generate-api.md`
+- `doc/domain/mail/server-requirements.md`
+- `doc/domain/mail/pr-split/03-create-api.md`
+- `doc/domain/mail/test-address-model.md`
+- `doc/api/v1/test-addresses/generate/backend.md`
 
 ---
 
@@ -38,6 +38,8 @@
 ---
 
 ## 성공 응답
+- 상태 코드: `201 Created`
+
 ```json
 {
   "id": 1,

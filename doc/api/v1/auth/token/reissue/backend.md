@@ -3,14 +3,14 @@
 ## 문서 목적
 이 문서는 Personal Mail Server의 토큰 재발급 기능에 대한 API 계약을 정의한다.
 
-본 문서는 `doc/auth/token-reissue.md`의 기능 설계를 바탕으로 작성되며, 토큰 재발급 요청과 응답, 검증 규칙, 상태 코드, 에러 규칙을 명확히 하는 것을 목적으로 한다.
+본 문서는 `doc/api/v1/auth/token/reissue/design.md`의 기능 설계를 바탕으로 작성되며, 토큰 재발급 요청과 응답, 검증 규칙, 상태 코드, 에러 규칙을 명확히 하는 것을 목적으로 한다.
 
 ---
 
 ## 기준 문서
-- 기능 설계 기준 문서: `doc/auth/token-reissue.md`
-- 로그인 API 기준 문서: `doc/auth/login-api.md`
-- 로그아웃 API 기준 문서: `doc/auth/logout-api.md`
+- 기능 설계 기준 문서: `doc/api/v1/auth/token/reissue/design.md`
+- 로그인 API 기준 문서: `doc/api/v1/auth/login/backend.md`
+- 로그아웃 API 기준 문서: `doc/api/v1/auth/logout/backend.md`
 - 문서 저장소 기준: `doc/README.md`
 - 기술 및 운영 기준: `TECH_STACK.md`
 

@@ -77,8 +77,8 @@
 - 논리 삭제 정책 초안 추가 가능
 
 ## 추천 후속 문서
-- `doc/mail/test-address-model.md`
-- 필요 시 `doc/mail/test-address-soft-delete.md`
+- `doc/domain/mail/test-address-model.md`
+- 필요 시 `doc/domain/mail/test-address-soft-delete.md`
 
 ## 테스트 범위
 - 저장 성공

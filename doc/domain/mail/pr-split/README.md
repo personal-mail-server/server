@@ -1,14 +1,14 @@
 # 테스트용 메일 주소 관리 PR 분할 계획
 
 ## 문서 목적
-이 문서는 `doc/mail/server-requirements.md` 기준 기능을 여러 개의 독립적인 PR로 분할하기 위한 계획 문서이다.
+이 문서는 `doc/domain/mail/server-requirements.md` 기준 기능을 여러 개의 독립적인 PR로 분할하기 위한 계획 문서이다.
 
 각 PR은 가능한 한 단독 리뷰와 단독 머지가 가능해야 하며, 다음 PR의 기반이 되는 최소 변경만 포함해야 한다.
 
 ---
 
 ## 기준 문서
-- `doc/mail/server-requirements.md`
+- `doc/domain/mail/server-requirements.md`
 - `doc/README.md`
 - `TECH_STACK.md`
 

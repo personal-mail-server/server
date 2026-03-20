@@ -13,9 +13,9 @@
 - 문서 저장소 기준: `doc/README.md`
 - 현재 구현 기준: `doc/project/current-stack.md`
 - 기존 인증 기능 기준:
-  - `doc/auth/login.md`
-  - `doc/auth/logout.md`
-  - `doc/auth/token-reissue.md`
+  - `doc/api/v1/auth/login/design.md`
+  - `doc/api/v1/auth/logout/design.md`
+  - `doc/api/v1/auth/token/reissue/design.md`
 
 ---
 

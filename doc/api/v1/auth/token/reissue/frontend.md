@@ -3,15 +3,15 @@
 ## 문서 목적
 이 문서는 토큰 재발급 기능이 프론트엔드에서 어떤 상태 전이와 처리 흐름을 가져야 하는지 정의한다.
 
-본 문서는 프론트엔드 동작 문서이며, 토큰 재발급 기능의 핵심 규칙은 `doc/auth/token-reissue.md`, API 계약은 `doc/auth/token-reissue-api.md`를 기준으로 한다.
+본 문서는 프론트엔드 동작 문서이며, 토큰 재발급 기능의 핵심 규칙은 `doc/api/v1/auth/token/reissue/design.md`, API 계약은 `doc/api/v1/auth/token/reissue/backend.md`를 기준으로 한다.
 
 ---
 
 ## 기준 문서
-- 기능 설계 기준 문서: `doc/auth/token-reissue.md`
-- API 기준 문서: `doc/auth/token-reissue-api.md`
-- 로그인 프론트엔드 기준 문서: `doc/auth/login-frontend.md`
-- 로그아웃 프론트엔드 기준 문서: `doc/auth/logout-frontend.md`
+- 기능 설계 기준 문서: `doc/api/v1/auth/token/reissue/design.md`
+- API 기준 문서: `doc/api/v1/auth/token/reissue/backend.md`
+- 로그인 프론트엔드 기준 문서: `doc/api/v1/auth/login/frontend.md`
+- 로그아웃 프론트엔드 기준 문서: `doc/api/v1/auth/logout/frontend.md`
 
 ---
 

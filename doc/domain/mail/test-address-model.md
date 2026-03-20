@@ -3,13 +3,13 @@
 ## 문서 목적
 이 문서는 테스트용 메일 주소 관리 기능의 저장 모델과 데이터베이스 스키마 기준을 정의한다.
 
-본 문서는 `doc/mail/server-requirements.md` 와 `doc/mail/pr-split/01-storage-foundation.md` 를 구현 가능한 데이터 모델 수준으로 구체화한 문서이다.
+본 문서는 `doc/domain/mail/server-requirements.md` 와 `doc/domain/mail/pr-split/01-storage-foundation.md` 를 구현 가능한 데이터 모델 수준으로 구체화한 문서이다.
 
 ---
 
 ## 기준 문서
-- `doc/mail/server-requirements.md`
-- `doc/mail/pr-split/01-storage-foundation.md`
+- `doc/domain/mail/server-requirements.md`
+- `doc/domain/mail/pr-split/01-storage-foundation.md`
 - `doc/project/current-stack.md`
 - `TECH_STACK.md`
 

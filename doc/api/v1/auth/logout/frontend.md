@@ -3,14 +3,14 @@
 ## 문서 목적
 이 문서는 로그아웃 기능이 프론트엔드에서 어떤 사용자 동작과 상태 전이를 가져야 하는지 정의한다.
 
-본 문서는 프론트엔드 동작 문서이며, 로그아웃 기능의 핵심 규칙은 `doc/auth/logout.md`, API 계약은 `doc/auth/logout-api.md`를 기준으로 한다.
+본 문서는 프론트엔드 동작 문서이며, 로그아웃 기능의 핵심 규칙은 `doc/api/v1/auth/logout/design.md`, API 계약은 `doc/api/v1/auth/logout/backend.md`를 기준으로 한다.
 
 ---
 
 ## 기준 문서
-- 기능 설계 기준 문서: `doc/auth/logout.md`
-- API 기준 문서: `doc/auth/logout-api.md`
-- 로그인 프론트엔드 기준 문서: `doc/auth/login-frontend.md`
+- 기능 설계 기준 문서: `doc/api/v1/auth/logout/design.md`
+- API 기준 문서: `doc/api/v1/auth/logout/backend.md`
+- 로그인 프론트엔드 기준 문서: `doc/api/v1/auth/login/frontend.md`
 
 ---
 
