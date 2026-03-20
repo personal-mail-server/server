@@ -61,20 +61,9 @@ func newService(repo Repository, users UserReader, issuer auth.TokenIssuer, gene
 }
 
 func (s *Service) GenerateCandidate(ctx context.Context, rawAccessToken string) (*GenerateCandidateResponse, *auth.AppError) {
-	claims, err := s.issuer.VerifyAccessToken(rawAccessToken)
-	if err != nil {
-		return nil, auth.NewInvalidAccessToken()
-	}
-
-	user, repoErr := s.users.FindByLoginID(ctx, claims.Subject)
-	if repoErr != nil {
-		if errors.Is(repoErr, auth.ErrUserNotFound) {
-			return nil, auth.NewInvalidAccessToken()
-		}
-		return nil, auth.NewInternalServerError()
-	}
-	if user.SessionVersion != claims.SessionVersion {
-		return nil, auth.NewInvalidAccessToken()
+	_, appErr := s.authenticateUser(ctx, rawAccessToken)
+	if appErr != nil {
+		return nil, appErr
 	}
 
 	for range maxGenerateCandidateTries {
@@ -94,4 +83,56 @@ func (s *Service) GenerateCandidate(ctx context.Context, rawAccessToken string) 
 	}
 
 	return nil, auth.NewInternalServerError()
+}
+
+func (s *Service) Create(ctx context.Context, rawAccessToken string, req CreateRequest) (*Response, *auth.AppError) {
+	if validationErr := ValidateCreateRequest(req); validationErr != nil {
+		return nil, validationErr
+	}
+
+	user, appErr := s.authenticateUser(ctx, rawAccessToken)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	_, findErr := s.repo.GetByEmail(ctx, req.Email)
+	if findErr == nil {
+		return nil, auth.NewConflict(auth.CodeDuplicateEmail, "이미 사용 중인 메일 주소입니다.")
+	}
+	if !errors.Is(findErr, ErrTestMailAddressNotFound) {
+		return nil, auth.NewInternalServerError()
+	}
+
+	created, err := s.repo.Create(ctx, TestMailAddress{
+		OwnerUserID: user.ID,
+		Email:       req.Email,
+	})
+	if err != nil {
+		if errors.Is(err, ErrDuplicateEmail) {
+			return nil, auth.NewConflict(auth.CodeDuplicateEmail, "이미 사용 중인 메일 주소입니다.")
+		}
+		return nil, auth.NewInternalServerError()
+	}
+
+	return NewResponse(created), nil
+}
+
+func (s *Service) authenticateUser(ctx context.Context, rawAccessToken string) (*auth.User, *auth.AppError) {
+	claims, err := s.issuer.VerifyAccessToken(rawAccessToken)
+	if err != nil {
+		return nil, auth.NewInvalidAccessToken()
+	}
+
+	user, repoErr := s.users.FindByLoginID(ctx, claims.Subject)
+	if repoErr != nil {
+		if errors.Is(repoErr, auth.ErrUserNotFound) {
+			return nil, auth.NewInvalidAccessToken()
+		}
+		return nil, auth.NewInternalServerError()
+	}
+	if user.SessionVersion != claims.SessionVersion {
+		return nil, auth.NewInvalidAccessToken()
+	}
+
+	return user, nil
 }

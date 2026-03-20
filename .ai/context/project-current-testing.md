@@ -23,6 +23,7 @@
   - migration utility tests for discovery and down-path derivation
   - test mail address repository tests for create/read/list/update-delete behaviors
   - test mail address candidate generation service and handler tests
+  - test mail address create service and handler tests
 - execution_checks:
   - `go test ./...`
   - `go build ./...`
@@ -62,6 +63,10 @@
   - not-found mapping
 - candidate_api_tests_exist: true
 - candidate_api_paths:
+  - `code/internal/testaddress/service_test.go`
+  - `code/internal/http/handlers/testaddress_handler_test.go`
+- create_api_tests_exist: true
+- create_api_paths:
   - `code/internal/testaddress/service_test.go`
   - `code/internal/http/handlers/testaddress_handler_test.go`
 
