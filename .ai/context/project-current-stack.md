@@ -66,10 +66,10 @@
   - test mail address migration pair
   - test mail address model document
   - test mail address repository package
+  - test mail address candidate generation API
 - not_yet_implemented:
-  - test mail address HTTP APIs
+  - test mail address create/read/update/delete APIs
   - test mail address frontend UI
-  - unique candidate generation API
 
 ## sync_note
 - If runtime stack, framework choice, database, docker layout, ports, or API documentation strategy changes, this file must be re-reviewed.
