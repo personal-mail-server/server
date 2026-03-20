@@ -400,6 +400,12 @@ button:disabled {
   word-break: break-word;
 }
 
+.detail-form {
+  display: grid;
+  gap: 14px;
+  padding-top: 4px;
+}
+
 .action-row {
   display: flex;
   gap: 12px;
@@ -407,6 +413,18 @@ button:disabled {
 
 .action-row > * {
   flex: 1;
+}
+
+.action-row-tight {
+  gap: 10px;
+}
+
+.danger-button {
+  background: #b91c1c;
+}
+
+.danger-button:hover {
+  background: #991b1b;
 }
 
 .status-success {

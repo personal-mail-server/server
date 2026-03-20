@@ -27,6 +27,10 @@ const detailOwner = document.getElementById("detail-owner");
 const detailCreatedAt = document.getElementById("detail-created-at");
 const detailUpdatedAt = document.getElementById("detail-updated-at");
 const detailDeletedAt = document.getElementById("detail-deleted-at");
+const updateAddressForm = document.getElementById("update-address-form");
+const updateEmailInput = document.getElementById("update-email");
+const updateAddressButton = document.getElementById("update-address-button");
+const deleteAddressButton = document.getElementById("delete-address-button");
 const createAddressForm = document.getElementById("create-address-form");
 const createEmailInput = document.getElementById("create-email");
 const generateCandidateButton = document.getElementById("generate-candidate-button");
@@ -58,6 +62,9 @@ function resetAddressViews() {
   detailCreatedAt.textContent = "-";
   detailUpdatedAt.textContent = "-";
   detailDeletedAt.textContent = "-";
+  updateEmailInput.value = "";
+  updateAddressButton.disabled = true;
+  deleteAddressButton.disabled = true;
   candidateHelper.textContent = "후보값을 받아 입력창을 채우거나, 원하는 주소를 직접 입력하세요.";
 }
 
@@ -105,6 +112,9 @@ function renderAddressDetail(address) {
   detailCreatedAt.textContent = formatDateTime(address.createdAt);
   detailUpdatedAt.textContent = formatDateTime(address.updatedAt);
   detailDeletedAt.textContent = formatDateTime(address.deletedAt);
+  updateEmailInput.value = address.email;
+  updateAddressButton.disabled = false;
+  deleteAddressButton.disabled = false;
 }
 
 function getSelectedAddress() {
@@ -216,6 +226,10 @@ function validateCreateEmail(email) {
   return null;
 }
 
+function getCurrentSelectedAddressId() {
+  return authState ? authState.selectedAddressId : null;
+}
+
 async function authorizedFetch(path, options = {}) {
   const headers = new Headers(options.headers || {});
   if (authState && authState.accessToken) {
@@ -311,6 +325,110 @@ async function refreshAddresses(options = {}) {
     });
   } finally {
     refreshAddressesButton.disabled = false;
+  }
+}
+
+async function updateSelectedAddress(nextEmail) {
+  const selectedId = getCurrentSelectedAddressId();
+  if (!selectedId) {
+    setStatus("status-warning", "수정할 주소를 먼저 선택해 주세요.", {});
+    return;
+  }
+
+  const validationError = validateCreateEmail(nextEmail);
+  if (validationError) {
+    setStatus("status-error", validationError.message, validationError);
+    return;
+  }
+
+  updateAddressButton.disabled = true;
+  setStatus("status-warning", "테스트용 메일 주소를 수정하는 중입니다.", {
+    request: `PUT /api/v1/test-addresses/${selectedId}`,
+    email: nextEmail,
+  });
+
+  try {
+    const { response, payload } = await authorizedFetch(`/api/v1/test-addresses/${selectedId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email: nextEmail }),
+    });
+
+    if (!response.ok) {
+      if (response.status !== 401) {
+        setStatus("status-error", payload.message || "주소를 수정하지 못했습니다.", payload);
+      }
+      return;
+    }
+
+    const index = authState.addresses.findIndex((address) => address.id === payload.id);
+    if (index >= 0) {
+      authState.addresses[index] = payload;
+    }
+    authState.selectedAddressId = payload.id;
+    renderAuthenticated();
+    await fetchAddressDetail(payload.id, { silent: true });
+    setStatus("status-success", "테스트용 메일 주소를 수정했습니다.", payload);
+  } catch (error) {
+    setStatus("status-error", "주소 수정 요청 중 예기치 않은 오류가 발생했습니다.", {
+      code: "NETWORK_ERROR",
+      message: error instanceof Error ? error.message : "unknown error",
+    });
+  } finally {
+    updateAddressButton.disabled = false;
+  }
+}
+
+async function deleteSelectedAddress() {
+  const selectedId = getCurrentSelectedAddressId();
+  const selectedAddress = getSelectedAddress();
+  if (!selectedId || !selectedAddress) {
+    setStatus("status-warning", "삭제할 주소를 먼저 선택해 주세요.", {});
+    return;
+  }
+
+  const confirmed = window.confirm(`정말로 ${selectedAddress.email} 주소를 삭제할까요?`);
+  if (!confirmed) {
+    return;
+  }
+
+  deleteAddressButton.disabled = true;
+  setStatus("status-warning", "테스트용 메일 주소를 삭제하는 중입니다.", {
+    request: `DELETE /api/v1/test-addresses/${selectedId}`,
+    email: selectedAddress.email,
+  });
+
+  try {
+    const { response, payload } = await authorizedFetch(`/api/v1/test-addresses/${selectedId}`, {
+      method: "DELETE",
+    });
+
+    if (response.status !== 204) {
+      if (response.status !== 401) {
+        setStatus("status-error", payload.message || "주소를 삭제하지 못했습니다.", payload);
+      }
+      return;
+    }
+
+    authState.addresses = authState.addresses.filter((address) => address.id !== selectedId);
+    authState.selectedAddressId = authState.addresses.length > 0 ? authState.addresses[0].id : null;
+    renderAuthenticated();
+    if (authState.selectedAddressId) {
+      await fetchAddressDetail(authState.selectedAddressId, { silent: true });
+    }
+    setStatus("status-success", "테스트용 메일 주소를 삭제했습니다.", {
+      status: 204,
+      deletedId: selectedId,
+    });
+  } catch (error) {
+    setStatus("status-error", "주소 삭제 요청 중 예기치 않은 오류가 발생했습니다.", {
+      code: "NETWORK_ERROR",
+      message: error instanceof Error ? error.message : "unknown error",
+    });
+  } finally {
+    deleteAddressButton.disabled = false;
   }
 }
 
@@ -532,6 +650,15 @@ createAddressForm.addEventListener("submit", async (event) => {
   } finally {
     createAddressButton.disabled = false;
   }
+});
+
+updateAddressForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await updateSelectedAddress(updateEmailInput.value.trim());
+});
+
+deleteAddressButton.addEventListener("click", async () => {
+  await deleteSelectedAddress();
 });
 
 renderLoggedOut();
