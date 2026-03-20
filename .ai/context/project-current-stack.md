@@ -42,6 +42,7 @@
   - role: auth page with login/logout interaction and reverse proxy to backend `/api` and `/docs`
 
 ## current_ports
+- db_public: 5432
 - frontend_public: 3000
 - backend_public: 18080
 - backend_internal: 8080
@@ -59,6 +60,16 @@
 - seed_user:
   - loginId: `user-01`
   - password: `pass1234`
+
+## mail_address_foundation_status
+- implemented:
+  - test mail address migration pair
+  - test mail address model document
+  - test mail address repository package
+- not_yet_implemented:
+  - test mail address HTTP APIs
+  - test mail address frontend UI
+  - unique candidate generation API
 
 ## sync_note
 - If runtime stack, framework choice, database, docker layout, ports, or API documentation strategy changes, this file must be re-reviewed.

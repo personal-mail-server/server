@@ -18,7 +18,7 @@
 - `doc/mail/pr-split/08-frontend-update-delete.md`
 
 ## split_summary
-- PR 1: storage foundation and logical-delete-ready schema
+- PR 1: storage foundation and logical-delete-ready schema with repository contract
 - PR 2: unique email candidate generation API
 - PR 3: create API
 - PR 4: list/detail read APIs
@@ -26,6 +26,13 @@
 - PR 6: logical delete API
 - PR 7: frontend list/detail/create
 - PR 8: frontend update/delete
+
+## pr1_detail
+- schema must include owner linkage, email, timestamps, and nullable `deleted_at`
+- DB-level uniqueness is required for email value
+- repository layer should be ready for create/get/list/update/soft-delete use cases
+- no HTTP, OpenAPI, or frontend work in PR 1
+- repository or DB-level tests must cover uniqueness and soft-delete behavior
 
 ## sequencing
 - recommended order is storage -> generate -> create -> read -> update -> delete -> frontend read/create -> frontend update/delete

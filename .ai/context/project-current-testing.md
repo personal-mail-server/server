@@ -21,6 +21,7 @@
   - logout service and handler tests
   - token reissue service and handler tests
   - migration utility tests for discovery and down-path derivation
+  - test mail address repository tests for create/read/list/update-delete behaviors
 - execution_checks:
   - `go test ./...`
   - `go build ./...`
@@ -49,6 +50,15 @@
 - no isolated database integration test suite
 - no real Postgres migration up/down integration test suite
 - no dedicated protected API middleware coverage yet
+
+## mail_address_test_status
+- repository_tests_exist: true
+- package_path: `code/internal/testaddress/postgres_repository_test.go`
+- coverage_focus:
+  - duplicate email handling
+  - active-owner listing
+  - soft delete behavior
+  - not-found mapping
 
 ## ci_status
 - workflow_exists: true

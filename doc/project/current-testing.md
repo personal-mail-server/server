@@ -15,6 +15,7 @@
   - `code/internal/auth/validation_test.go`
   - `code/internal/db/migrate_test.go`
   - `code/internal/http/handlers/auth_handler_test.go`
+  - `code/internal/testaddress/postgres_repository_test.go`
   - `code/README.md`
 
 ---
@@ -26,6 +27,7 @@
   - 입력 검증 로직
   - 로그인/로그아웃/토큰 재발급 HTTP 핸들러 일부
   - 마이그레이션 파일 탐색 및 롤백 파일 매핑 로직
+  - 테스트용 메일 주소 리포지토리 로직
 - 현재 실행 검증 대상:
   - `go test ./...`
   - `go build ./...`
@@ -103,6 +105,18 @@
 - 업 마이그레이션 파일 목록이 오름차순으로 수집되는지 확인
 - `*.down.sql` 파일이 업 마이그레이션 목록에서 제외되는지 확인
 - 업 파일 기준으로 대응 다운 파일 경로가 올바르게 계산되는지 확인
+
+### 테스트용 메일 주소 리포지토리 테스트
+위치:
+- `code/internal/testaddress/postgres_repository_test.go`
+
+현재 검증 항목:
+- 테스트용 메일 주소 저장 성공
+- 메일 주소 유니크 충돌 처리
+- ID 기준 조회 실패 시 not found 처리
+- 이메일 기준 조회 성공
+- 소유자 기준 활성 목록 조회
+- 논리 삭제 성공 및 not found 처리
 
 ---
 
@@ -218,6 +232,6 @@ make down
 ---
 
 ## 정리
-현재 프로젝트는 Go 단위 테스트와 Docker 기반 실행 검증을 함께 사용해 로그인/로그아웃/토큰 재발급 인증 슬라이스와 마이그레이션 유틸리티를 검증하고 있다.
+현재 프로젝트는 Go 단위 테스트와 Docker 기반 실행 검증을 함께 사용해 로그인/로그아웃/토큰 재발급 인증 슬라이스, 테스트용 메일 주소 저장 기반, 마이그레이션 유틸리티를 검증하고 있다.
 
 본 문서는 AI가 실제로 어떤 테스트를 작성하고 어떤 검증을 수행했는지 추적하기 위한 현재 상태 문서이며, 앞으로 테스트 체계가 바뀌면 지속적으로 함께 갱신되어야 한다.
