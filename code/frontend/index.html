@@ -134,6 +134,26 @@
                     <dd id="detail-deleted-at">-</dd>
                   </div>
                 </dl>
+
+                <form id="update-address-form" class="detail-form" novalidate>
+                  <label class="field">
+                    <span>메일 주소 수정</span>
+                    <input
+                      id="update-email"
+                      name="email"
+                      type="email"
+                      inputmode="email"
+                      autocomplete="off"
+                      placeholder="updated@mail.local"
+                      required
+                    />
+                  </label>
+
+                  <div class="action-row action-row-tight">
+                    <button id="update-address-button" type="submit">수정 저장</button>
+                    <button id="delete-address-button" type="button" class="danger-button">주소 삭제</button>
+                  </div>
+                </form>
               </article>
             </section>
 
