@@ -8,7 +8,7 @@
   </head>
   <body>
     <main class="page-shell">
-      <section class="login-card">
+      <section class="login-card app-card">
         <section id="login-view">
           <header class="card-header">
             <h1>로그인</h1>
@@ -55,8 +55,8 @@
         <section id="auth-view" class="hidden" aria-live="polite">
           <header class="card-header auth-header">
             <div>
-              <h1>인증됨</h1>
-              <p>현재 로그인된 세션 정보를 확인할 수 있습니다.</p>
+              <h1>테스트용 메일 주소 관리</h1>
+              <p>목록, 상세, 생성 흐름을 한 화면에서 확인할 수 있습니다.</p>
             </div>
             <div class="user-menu">
               <span id="user-menu-label" class="user-chip">-</span>
@@ -81,6 +81,95 @@
               <span class="summary-label">리프레시 만료(초)</span>
               <strong id="session-refresh-expiry">-</strong>
             </div>
+          </section>
+
+          <section class="mail-workspace">
+            <section class="address-column address-list-column">
+              <header class="panel-header">
+                <div>
+                  <h2>주소 목록</h2>
+                  <p>내 테스트용 메일 주소를 확인합니다.</p>
+                </div>
+                <button id="refresh-addresses-button" type="button" class="ghost-button">새로고침</button>
+              </header>
+
+              <div id="address-list-meta" class="meta-row">0개의 주소</div>
+              <div id="address-list-empty" class="empty-state hidden">아직 생성된 테스트용 메일 주소가 없습니다.</div>
+              <div id="address-list" class="address-list" role="list"></div>
+            </section>
+
+            <section class="address-column address-detail-column">
+              <header class="panel-header">
+                <div>
+                  <h2>상세 정보</h2>
+                  <p>선택한 주소의 현재 상태를 확인합니다.</p>
+                </div>
+              </header>
+
+              <div id="address-detail-empty" class="empty-state">목록에서 주소를 선택하면 상세 정보가 표시됩니다.</div>
+              <article id="address-detail-card" class="detail-card hidden">
+                <div class="detail-hero">
+                  <strong id="detail-email">-</strong>
+                  <span id="detail-badge" class="detail-badge">ACTIVE</span>
+                </div>
+                <dl class="detail-grid">
+                  <div>
+                    <dt>ID</dt>
+                    <dd id="detail-id">-</dd>
+                  </div>
+                  <div>
+                    <dt>소유 사용자</dt>
+                    <dd id="detail-owner">-</dd>
+                  </div>
+                  <div>
+                    <dt>생성 시각</dt>
+                    <dd id="detail-created-at">-</dd>
+                  </div>
+                  <div>
+                    <dt>수정 시각</dt>
+                    <dd id="detail-updated-at">-</dd>
+                  </div>
+                  <div>
+                    <dt>삭제 시각</dt>
+                    <dd id="detail-deleted-at">-</dd>
+                  </div>
+                </dl>
+              </article>
+            </section>
+
+            <section class="address-column address-create-column">
+              <header class="panel-header">
+                <div>
+                  <h2>새 주소 생성</h2>
+                  <p>직접 입력하거나 서버가 추천한 후보값을 사용할 수 있습니다.</p>
+                </div>
+              </header>
+
+              <form id="create-address-form" class="login-form" novalidate>
+                <label class="field">
+                  <span>테스트용 메일 주소</span>
+                  <input
+                    id="create-email"
+                    name="email"
+                    type="email"
+                    inputmode="email"
+                    autocomplete="off"
+                    placeholder="example@mail.local"
+                    required
+                  />
+                </label>
+
+                <div class="action-row">
+                  <button id="generate-candidate-button" type="button" class="ghost-button">후보값 받기</button>
+                  <button id="create-address-button" type="submit">주소 생성</button>
+                </div>
+              </form>
+
+              <div class="helper-box helper-box-inline">
+                <p id="candidate-helper">후보값을 받아 입력창을 채우거나, 원하는 주소를 직접 입력하세요.</p>
+                <p>생성 성공 후 목록과 상세 정보가 즉시 갱신됩니다.</p>
+              </div>
+            </section>
           </section>
         </section>
 
