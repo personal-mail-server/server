@@ -142,7 +142,7 @@ func TestTestAddressHandlerGenerateCandidateMissingAuthorization(t *testing.T) {
 	service := testaddress.NewService(&testAddressRepo{used: map[string]testaddress.TestMailAddress{}}, testAddressUserReader{}, testAddressTokenIssuer{})
 	h := NewTestAddressHandler(service)
 
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/test-addresses/generate", nil)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/mails/generate", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
@@ -159,7 +159,7 @@ func TestTestAddressHandlerGenerateCandidateSuccess(t *testing.T) {
 	service := testaddress.NewService(&testAddressRepo{used: map[string]testaddress.TestMailAddress{}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
 	h := NewTestAddressHandler(service)
 
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/test-addresses/generate", nil)
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/mails/generate", nil)
 	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
@@ -185,7 +185,7 @@ func TestTestAddressHandlerCreateInvalidJSON(t *testing.T) {
 	service := testaddress.NewService(&testAddressRepo{used: map[string]testaddress.TestMailAddress{}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
 	h := NewTestAddressHandler(service)
 
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/test-addresses", strings.NewReader("{"))
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/mails", strings.NewReader("{"))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
 	rec := httptest.NewRecorder()
@@ -204,7 +204,7 @@ func TestTestAddressHandlerCreateSuccess(t *testing.T) {
 	service := testaddress.NewService(&testAddressRepo{used: map[string]testaddress.TestMailAddress{}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
 	h := NewTestAddressHandler(service)
 
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/test-addresses", strings.NewReader(`{"email":"new@mail.local"}`))
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/mails", strings.NewReader(`{"email":"new@mail.local"}`))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
 	rec := httptest.NewRecorder()
@@ -231,7 +231,7 @@ func TestTestAddressHandlerCreateDuplicateEmail(t *testing.T) {
 	service := testaddress.NewService(&testAddressRepo{used: map[string]testaddress.TestMailAddress{"dup@mail.local": {ID: 1, Email: "dup@mail.local"}}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
 	h := NewTestAddressHandler(service)
 
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/test-addresses", strings.NewReader(`{"email":"dup@mail.local"}`))
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/mails", strings.NewReader(`{"email":"dup@mail.local"}`))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
 	rec := httptest.NewRecorder()
@@ -254,7 +254,7 @@ func TestTestAddressHandlerListSuccess(t *testing.T) {
 	}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
 	h := NewTestAddressHandler(service)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/v1/test-addresses", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/mails", nil)
 	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
@@ -282,11 +282,11 @@ func TestTestAddressHandlerGetByIDSuccess(t *testing.T) {
 	}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
 	h := NewTestAddressHandler(service)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/v1/test-addresses/11", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/mails/11", nil)
 	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	c.SetPath("/api/v1/test-addresses/:id")
+	c.SetPath("/api/v1/mails/:id")
 	c.SetParamNames("id")
 	c.SetParamValues("11")
 
@@ -303,11 +303,11 @@ func TestTestAddressHandlerGetByIDNotFound(t *testing.T) {
 	service := testaddress.NewService(&testAddressRepo{used: map[string]testaddress.TestMailAddress{}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
 	h := NewTestAddressHandler(service)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/v1/test-addresses/99", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/mails/99", nil)
 	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	c.SetPath("/api/v1/test-addresses/:id")
+	c.SetPath("/api/v1/mails/:id")
 	c.SetParamNames("id")
 	c.SetParamValues("99")
 
@@ -326,12 +326,12 @@ func TestTestAddressHandlerUpdateSuccess(t *testing.T) {
 	}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
 	h := NewTestAddressHandler(service)
 
-	req := httptest.NewRequest(http.MethodPut, "/api/v1/test-addresses/8", strings.NewReader(`{"email":"updated@mail.local"}`))
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/mails/8", strings.NewReader(`{"email":"updated@mail.local"}`))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	c.SetPath("/api/v1/test-addresses/:id")
+	c.SetPath("/api/v1/mails/:id")
 	c.SetParamNames("id")
 	c.SetParamValues("8")
 
@@ -351,12 +351,12 @@ func TestTestAddressHandlerUpdateDuplicateEmail(t *testing.T) {
 	}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
 	h := NewTestAddressHandler(service)
 
-	req := httptest.NewRequest(http.MethodPut, "/api/v1/test-addresses/8", strings.NewReader(`{"email":"dup@mail.local"}`))
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/mails/8", strings.NewReader(`{"email":"dup@mail.local"}`))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	c.SetPath("/api/v1/test-addresses/:id")
+	c.SetPath("/api/v1/mails/:id")
 	c.SetParamNames("id")
 	c.SetParamValues("8")
 
@@ -375,12 +375,12 @@ func TestTestAddressHandlerUpdateNonOwnerAsNotFound(t *testing.T) {
 	}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
 	h := NewTestAddressHandler(service)
 
-	req := httptest.NewRequest(http.MethodPut, "/api/v1/test-addresses/8", strings.NewReader(`{"email":"updated@mail.local"}`))
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/mails/8", strings.NewReader(`{"email":"updated@mail.local"}`))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	c.SetPath("/api/v1/test-addresses/:id")
+	c.SetPath("/api/v1/mails/:id")
 	c.SetParamNames("id")
 	c.SetParamValues("8")
 
@@ -399,11 +399,11 @@ func TestTestAddressHandlerDeleteSuccess(t *testing.T) {
 	}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
 	h := NewTestAddressHandler(service)
 
-	req := httptest.NewRequest(http.MethodDelete, "/api/v1/test-addresses/8", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/mails/8", nil)
 	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	c.SetPath("/api/v1/test-addresses/:id")
+	c.SetPath("/api/v1/mails/:id")
 	c.SetParamNames("id")
 	c.SetParamValues("8")
 
@@ -422,11 +422,11 @@ func TestTestAddressHandlerDeleteNonOwnerAsNotFound(t *testing.T) {
 	}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
 	h := NewTestAddressHandler(service)
 
-	req := httptest.NewRequest(http.MethodDelete, "/api/v1/test-addresses/8", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/mails/8", nil)
 	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	c.SetPath("/api/v1/test-addresses/:id")
+	c.SetPath("/api/v1/mails/:id")
 	c.SetParamNames("id")
 	c.SetParamValues("8")
 

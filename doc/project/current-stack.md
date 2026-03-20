@@ -161,12 +161,12 @@
 추가로 현재는 테스트용 메일 주소 관리 기능의 초기 단계로, DB 마이그레이션과 내부 저장 모델/리포지토리 패키지, 후보 생성 API, 생성 API, 목록/상세 조회 API, 수정 API, 논리 삭제 API가 반영되어 있다. 프론트엔드는 목록/상세/생성/수정/삭제/후보 생성 UI까지 반영되어 있다.
 
 현재 테스트용 메일 주소 관련 직접 호출 경로:
-- 목록 조회 API: `http://localhost:18080/api/v1/test-addresses`
-- 상세 조회 API: `http://localhost:18080/api/v1/test-addresses/{id}`
-- 생성 API: `http://localhost:18080/api/v1/test-addresses`
-- 수정 API: `http://localhost:18080/api/v1/test-addresses/{id}`
-- 삭제 API: `http://localhost:18080/api/v1/test-addresses/{id}`
-- 후보 생성 API: `http://localhost:18080/api/v1/test-addresses/generate`
+- 목록 조회 API: `http://localhost:18080/api/v1/mails`
+- 상세 조회 API: `http://localhost:18080/api/v1/mails/{id}`
+- 생성 API: `http://localhost:18080/api/v1/mails`
+- 수정 API: `http://localhost:18080/api/v1/mails/{id}`
+- 삭제 API: `http://localhost:18080/api/v1/mails/{id}`
+- 후보 생성 API: `http://localhost:18080/api/v1/mails/generate`
 
 ---
 
@@ -179,7 +179,7 @@
 - `code/openapi/` - OpenAPI 계약 파일
 - `code/frontend/` - 로그인 프론트엔드 정적 자산 및 nginx 설정
 - `doc/api/v1/auth/` - 인증 API URL 루트 기준 문서
-- `doc/api/v1/test-addresses/` - 테스트용 메일 주소 API URL 루트 기준 문서
+- `doc/api/v1/mails/` - 테스트용 메일 주소 API URL 루트 기준 문서
 - `doc/domain/mail/` - 메일 도메인 요구사항/모델/PR 분할 계획 문서
 - `doc/project/` - 프로젝트 구성/운영 관점 기준 문서
 

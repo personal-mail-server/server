@@ -19,7 +19,7 @@ func Register(e *echo.Echo, authHandler *handlers.AuthHandler, testAddressHandle
 	authGroup.POST("/login", authHandler.Login)
 	authGroup.POST("/logout", authHandler.Logout)
 	authGroup.POST("/token/reissue", authHandler.Reissue)
-	testAddressGroup := v1.Group("/test-addresses")
+	testAddressGroup := v1.Group("/mails")
 	testAddressGroup.GET("", testAddressHandler.List)
 	testAddressGroup.GET("/:id", testAddressHandler.GetByID)
 	testAddressGroup.POST("", testAddressHandler.Create)

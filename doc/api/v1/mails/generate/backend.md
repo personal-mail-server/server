@@ -14,7 +14,7 @@
 
 ## 엔드포인트
 - 메서드: `POST`
-- 경로: `/api/v1/test-addresses/generate`
+- 경로: `/api/v1/mails/generate`
 
 ---
 
