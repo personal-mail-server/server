@@ -98,8 +98,28 @@ func (r *testAddressRepo) ListByOwner(_ context.Context, ownerID int64) ([]testa
 	return result, nil
 }
 
-func (r *testAddressRepo) Update(context.Context, testaddress.TestMailAddress) (*testaddress.TestMailAddress, error) {
-	panic("not used")
+func (r *testAddressRepo) Update(_ context.Context, address testaddress.TestMailAddress) (*testaddress.TestMailAddress, error) {
+	var current testaddress.TestMailAddress
+	found := false
+	for _, candidate := range r.used {
+		if candidate.ID == address.ID {
+			current = candidate
+			found = true
+			break
+		}
+	}
+	if !found || current.DeletedAt != nil {
+		return nil, testaddress.ErrTestMailAddressNotFound
+	}
+	if existing, ok := r.used[address.Email]; ok && existing.ID != address.ID {
+		return nil, testaddress.ErrDuplicateEmail
+	}
+	delete(r.used, current.Email)
+	current.Email = address.Email
+	current.UpdatedAt = time.Date(2026, 3, 20, 4, 0, 0, 0, time.UTC)
+	r.used[current.Email] = current
+	copy := current
+	return &copy, nil
 }
 
 func (r *testAddressRepo) SoftDelete(context.Context, int64, time.Time) error { panic("not used") }
@@ -279,6 +299,79 @@ func TestTestAddressHandlerGetByIDNotFound(t *testing.T) {
 	c.SetParamValues("99")
 
 	if err := h.GetByID(c); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected status 404, got %d", rec.Code)
+	}
+}
+
+func TestTestAddressHandlerUpdateSuccess(t *testing.T) {
+	e := echo.New()
+	service := testaddress.NewService(&testAddressRepo{used: map[string]testaddress.TestMailAddress{
+		"old@mail.local": {ID: 8, OwnerUserID: 1, Email: "old@mail.local"},
+	}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
+	h := NewTestAddressHandler(service)
+
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/test-addresses/8", strings.NewReader(`{"email":"updated@mail.local"}`))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/api/v1/test-addresses/:id")
+	c.SetParamNames("id")
+	c.SetParamValues("8")
+
+	if err := h.Update(c); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", rec.Code)
+	}
+}
+
+func TestTestAddressHandlerUpdateDuplicateEmail(t *testing.T) {
+	e := echo.New()
+	service := testaddress.NewService(&testAddressRepo{used: map[string]testaddress.TestMailAddress{
+		"own@mail.local": {ID: 8, OwnerUserID: 1, Email: "own@mail.local"},
+		"dup@mail.local": {ID: 9, OwnerUserID: 1, Email: "dup@mail.local"},
+	}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
+	h := NewTestAddressHandler(service)
+
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/test-addresses/8", strings.NewReader(`{"email":"dup@mail.local"}`))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/api/v1/test-addresses/:id")
+	c.SetParamNames("id")
+	c.SetParamValues("8")
+
+	if err := h.Update(c); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("expected status 409, got %d", rec.Code)
+	}
+}
+
+func TestTestAddressHandlerUpdateNonOwnerAsNotFound(t *testing.T) {
+	e := echo.New()
+	service := testaddress.NewService(&testAddressRepo{used: map[string]testaddress.TestMailAddress{
+		"hidden@mail.local": {ID: 8, OwnerUserID: 99, Email: "hidden@mail.local"},
+	}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
+	h := NewTestAddressHandler(service)
+
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/test-addresses/8", strings.NewReader(`{"email":"updated@mail.local"}`))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/api/v1/test-addresses/:id")
+	c.SetParamNames("id")
+	c.SetParamValues("8")
+
+	if err := h.Update(c); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if rec.Code != http.StatusNotFound {

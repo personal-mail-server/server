@@ -8,12 +8,20 @@ import (
 )
 
 func ValidateCreateRequest(req CreateRequest) *auth.AppError {
-	if strings.TrimSpace(req.Email) == "" {
+	return validateEmailField(req.Email)
+}
+
+func ValidateUpdateRequest(req UpdateRequest) *auth.AppError {
+	return validateEmailField(req.Email)
+}
+
+func validateEmailField(email string) *auth.AppError {
+	if strings.TrimSpace(email) == "" {
 		return auth.NewBadRequest(auth.CodeMissingRequired)
 	}
 
-	parsed, err := mail.ParseAddress(req.Email)
-	if err != nil || parsed.Address != req.Email {
+	parsed, err := mail.ParseAddress(email)
+	if err != nil || parsed.Address != email {
 		return auth.NewBadRequest(auth.CodeInvalidEmail)
 	}
 
