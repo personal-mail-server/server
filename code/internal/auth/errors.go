@@ -6,11 +6,13 @@ const (
 	CodeInvalidRequestBody  = "INVALID_REQUEST_BODY"
 	CodeInvalidLoginID      = "INVALID_LOGIN_ID_FORMAT"
 	CodeInvalidPassword     = "INVALID_PASSWORD_FORMAT"
+	CodeInvalidEmail        = "INVALID_EMAIL_FORMAT"
 	CodeMissingRequired     = "MISSING_REQUIRED_FIELD"
 	CodeInvalidCredentials  = "INVALID_CREDENTIALS"
 	CodeInvalidAccessToken  = "INVALID_ACCESS_TOKEN"
 	CodeInvalidRefreshToken = "INVALID_REFRESH_TOKEN"
 	CodeAccountLocked       = "ACCOUNT_LOCKED"
+	CodeDuplicateEmail      = "DUPLICATE_TEST_ADDRESS_EMAIL"
 	CodeInternalServerError = "INTERNAL_SERVER_ERROR"
 )
 
@@ -46,4 +48,8 @@ func NewLocked() *AppError {
 
 func NewInternalServerError() *AppError {
 	return &AppError{Status: http.StatusInternalServerError, Code: CodeInternalServerError, Message: "요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요."}
+}
+
+func NewConflict(code string, message string) *AppError {
+	return &AppError{Status: http.StatusConflict, Code: code, Message: message}
 }

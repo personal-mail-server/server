@@ -181,6 +181,71 @@ paths:
               example:
                 code: INTERNAL_SERVER_ERROR
                 message: 요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요.
+  /api/v1/test-addresses:
+    post:
+      summary: 테스트용 메일 주소 생성
+      description: Bearer 액세스 토큰을 검증한 뒤 사용자가 입력한 테스트용 메일 주소를 생성한다.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TestAddressCreateRequest'
+      responses:
+        '201':
+          description: 테스트용 메일 주소 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestAddressResponse'
+        '400':
+          description: 요청 형식 또는 이메일 입력값 검증 실패
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidBody:
+                  value:
+                    code: INVALID_REQUEST_BODY
+                    message: 입력값 형식이 올바르지 않습니다.
+                invalidEmail:
+                  value:
+                    code: INVALID_EMAIL_FORMAT
+                    message: 입력값 형식이 올바르지 않습니다.
+                missingField:
+                  value:
+                    code: MISSING_REQUIRED_FIELD
+                    message: 입력값 형식이 올바르지 않습니다.
+        '401':
+          description: 인증 실패 또는 무효 세션
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INVALID_ACCESS_TOKEN
+                message: 인증 정보가 유효하지 않습니다. 다시 로그인해 주세요.
+        '409':
+          description: 이미 존재하는 테스트용 메일 주소
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: DUPLICATE_TEST_ADDRESS_EMAIL
+                message: 이미 사용 중인 메일 주소입니다.
+        '500':
+          description: 서버 내부 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_SERVER_ERROR
+                message: 요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요.
 components:
   securitySchemes:
     bearerAuth:
@@ -253,3 +318,40 @@ components:
         email:
           type: string
           example: test-a1b2c3d4e5f6@mail.local
+    TestAddressCreateRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          example: created@mail.local
+    TestAddressResponse:
+      type: object
+      required:
+        - id
+        - ownerUserId
+        - email
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          format: int64
+        ownerUserId:
+          type: integer
+          format: int64
+        email:
+          type: string
+          format: email
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true

@@ -73,8 +73,22 @@ type memoryRepo struct {
 	err     error
 }
 
-func (m *memoryRepo) Create(context.Context, TestMailAddress) (*TestMailAddress, error) {
-	panic("not used")
+func (m *memoryRepo) Create(_ context.Context, address TestMailAddress) (*TestMailAddress, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	if _, ok := m.byEmail[address.Email]; ok {
+		return nil, ErrDuplicateEmail
+	}
+	created := TestMailAddress{
+		ID:          int64(len(m.byEmail) + 1),
+		OwnerUserID: address.OwnerUserID,
+		Email:       address.Email,
+		CreatedAt:   time.Date(2026, 3, 20, 0, 0, 0, 0, time.UTC),
+		UpdatedAt:   time.Date(2026, 3, 20, 0, 0, 0, 0, time.UTC),
+	}
+	m.byEmail[address.Email] = created
+	return &created, nil
 }
 func (m *memoryRepo) GetByID(context.Context, int64) (*TestMailAddress, error) { panic("not used") }
 func (m *memoryRepo) ListByOwner(context.Context, int64) ([]TestMailAddress, error) {
@@ -141,5 +155,54 @@ func TestGenerateCandidateReturnsInternalErrorOnRepositoryFailure(t *testing.T) 
 	_, appErr := service.GenerateCandidate(context.Background(), "valid-token")
 	if appErr == nil || appErr.Code != auth.CodeInternalServerError {
 		t.Fatalf("expected internal server error, got %+v", appErr)
+	}
+}
+
+func TestCreateStoresAddressForAuthenticatedUser(t *testing.T) {
+	repo := &memoryRepo{byEmail: map[string]TestMailAddress{}}
+	issuer := fakeTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 3, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}}
+	users := fakeUserReader{user: &auth.User{ID: 44, LoginID: "user-01", SessionVersion: 3}}
+	service := newService(repo, users, issuer, nil)
+
+	resp, appErr := service.Create(context.Background(), "valid-token", CreateRequest{Email: "created@mail.local"})
+	if appErr != nil {
+		t.Fatalf("expected success, got %+v", appErr)
+	}
+	if resp.Email != "created@mail.local" || resp.OwnerUserID != 44 {
+		t.Fatalf("unexpected response: %+v", resp)
+	}
+	stored, ok := repo.byEmail["created@mail.local"]
+	if !ok || stored.OwnerUserID != 44 {
+		t.Fatalf("expected owner-linked stored address, got %+v", stored)
+	}
+}
+
+func TestCreateRejectsDuplicateEmail(t *testing.T) {
+	repo := &memoryRepo{byEmail: map[string]TestMailAddress{"dup@mail.local": {ID: 1, Email: "dup@mail.local"}}}
+	issuer := fakeTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}}
+	users := fakeUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}
+	service := newService(repo, users, issuer, nil)
+
+	_, appErr := service.Create(context.Background(), "valid-token", CreateRequest{Email: "dup@mail.local"})
+	if appErr == nil || appErr.Status != 409 || appErr.Code != auth.CodeDuplicateEmail {
+		t.Fatalf("expected duplicate conflict, got %+v", appErr)
+	}
+}
+
+func TestCreateRejectsInvalidEmailFormat(t *testing.T) {
+	service := newService(&memoryRepo{byEmail: map[string]TestMailAddress{}}, fakeUserReader{}, fakeTokenIssuer{}, nil)
+
+	_, appErr := service.Create(context.Background(), "valid-token", CreateRequest{Email: "not-an-email"})
+	if appErr == nil || appErr.Code != auth.CodeInvalidEmail {
+		t.Fatalf("expected invalid email error, got %+v", appErr)
+	}
+}
+
+func TestCreateRejectsMissingEmail(t *testing.T) {
+	service := newService(&memoryRepo{byEmail: map[string]TestMailAddress{}}, fakeUserReader{}, fakeTokenIssuer{}, nil)
+
+	_, appErr := service.Create(context.Background(), "valid-token", CreateRequest{})
+	if appErr == nil || appErr.Code != auth.CodeMissingRequired {
+		t.Fatalf("expected missing required error, got %+v", appErr)
 	}
 }

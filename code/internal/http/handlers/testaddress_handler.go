@@ -31,3 +31,26 @@ func (h *TestAddressHandler) GenerateCandidate(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, resp)
 }
+
+func (h *TestAddressHandler) Create(c echo.Context) error {
+	rawToken, ok := extractBearerToken(c.Request().Header.Get(echo.HeaderAuthorization))
+	if !ok {
+		appErr := auth.NewInvalidAccessToken()
+		return c.JSON(appErr.Status, auth.ErrorResponse{Code: appErr.Code, Message: appErr.Message})
+	}
+
+	var req testaddress.CreateRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, auth.ErrorResponse{
+			Code:    auth.CodeInvalidRequestBody,
+			Message: "입력값 형식이 올바르지 않습니다.",
+		})
+	}
+
+	resp, appErr := h.service.Create(c.Request().Context(), rawToken, req)
+	if appErr != nil {
+		return c.JSON(appErr.Status, auth.ErrorResponse{Code: appErr.Code, Message: appErr.Message})
+	}
+
+	return c.JSON(http.StatusCreated, resp)
+}

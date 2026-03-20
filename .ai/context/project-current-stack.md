@@ -67,8 +67,9 @@
   - test mail address model document
   - test mail address repository package
   - test mail address candidate generation API
+  - test mail address create API
 - not_yet_implemented:
-  - test mail address create/read/update/delete APIs
+  - test mail address read/update/delete APIs
   - test mail address frontend UI
 
 ## sync_note

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -51,8 +52,28 @@ type testAddressRepo struct {
 	used map[string]testaddress.TestMailAddress
 }
 
-func (r *testAddressRepo) Create(context.Context, testaddress.TestMailAddress) (*testaddress.TestMailAddress, error) {
-	panic("not used")
+func (r *testAddressRepo) Create(_ context.Context, address testaddress.TestMailAddress) (*testaddress.TestMailAddress, error) {
+	if r.used == nil {
+		r.used = map[string]testaddress.TestMailAddress{}
+	}
+	if _, ok := r.used[address.Email]; ok {
+		return nil, testaddress.ErrDuplicateEmail
+	}
+	created := testaddress.TestMailAddress{
+		ID:          int64(len(r.used) + 1),
+		OwnerUserID: address.OwnerUserID,
+		Email:       address.Email,
+		CreatedAt:   time.Date(2026, 3, 20, 0, 0, 0, 0, time.UTC),
+		UpdatedAt:   time.Date(2026, 3, 20, 0, 0, 0, 0, time.UTC),
+	}
+	if r.used == nil {
+		r.used = map[string]testaddress.TestMailAddress{}
+	}
+	if _, ok := r.used[address.Email]; ok {
+		return nil, testaddress.ErrDuplicateEmail
+	}
+	r.used[address.Email] = created
+	return &created, nil
 }
 func (r *testAddressRepo) GetByID(context.Context, int64) (*testaddress.TestMailAddress, error) {
 	panic("not used")
@@ -75,6 +96,20 @@ func (r *testAddressRepo) GetByEmail(_ context.Context, email string) (*testaddr
 type fixedCandidateGenerator struct{ email string }
 
 func (g fixedCandidateGenerator) Next() (string, error) { return g.email, nil }
+
+type failingTokenIssuer struct{}
+
+func (failingTokenIssuer) IssuePair(_ time.Time, _ string, _ int, _ string) (*auth.IssuedTokenPair, error) {
+	panic("not used")
+}
+
+func (failingTokenIssuer) VerifyAccessToken(_ string) (*auth.AuthTokenClaims, error) {
+	return nil, auth.ErrInvalidToken
+}
+
+func (failingTokenIssuer) VerifyRefreshToken(_ string) (*auth.AuthTokenClaims, error) {
+	panic("not used")
+}
 
 func TestTestAddressHandlerGenerateCandidateMissingAuthorization(t *testing.T) {
 	e := echo.New()
@@ -116,5 +151,70 @@ func TestTestAddressHandlerGenerateCandidateSuccess(t *testing.T) {
 	}
 	if body.Email == "" {
 		t.Fatalf("expected generated email response")
+	}
+}
+
+func TestTestAddressHandlerCreateInvalidJSON(t *testing.T) {
+	e := echo.New()
+	service := testaddress.NewService(&testAddressRepo{used: map[string]testaddress.TestMailAddress{}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
+	h := NewTestAddressHandler(service)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/test-addresses", strings.NewReader("{"))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	if err := h.Create(c); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d", rec.Code)
+	}
+}
+
+func TestTestAddressHandlerCreateSuccess(t *testing.T) {
+	e := echo.New()
+	service := testaddress.NewService(&testAddressRepo{used: map[string]testaddress.TestMailAddress{}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
+	h := NewTestAddressHandler(service)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/test-addresses", strings.NewReader(`{"email":"new@mail.local"}`))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	if err := h.Create(c); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected status 201, got %d", rec.Code)
+	}
+
+	var body testaddress.Response
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("unmarshal response: %v", err)
+	}
+	if body.Email != "new@mail.local" || body.OwnerUserID != 1 {
+		t.Fatalf("unexpected response: %+v", body)
+	}
+}
+
+func TestTestAddressHandlerCreateDuplicateEmail(t *testing.T) {
+	e := echo.New()
+	service := testaddress.NewService(&testAddressRepo{used: map[string]testaddress.TestMailAddress{"dup@mail.local": {ID: 1, Email: "dup@mail.local"}}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
+	h := NewTestAddressHandler(service)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/test-addresses", strings.NewReader(`{"email":"dup@mail.local"}`))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	if err := h.Create(c); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("expected status 409, got %d", rec.Code)
 	}
 }
