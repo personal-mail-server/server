@@ -253,7 +253,7 @@ async function authorizedFetch(path, options = {}) {
 
 async function fetchAddressDetail(id, options = {}) {
   const { silent = false } = options;
-  const { response, payload } = await authorizedFetch(`/api/v1/test-addresses/${id}`);
+  const { response, payload } = await authorizedFetch(`/api/v1/mails/${id}`);
 
   if (!response.ok) {
     if (!silent && response.status !== 401) {
@@ -286,13 +286,13 @@ async function refreshAddresses(options = {}) {
   const { preferredId = authState.selectedAddressId, silent = false } = options;
   if (!silent) {
     setStatus("status-warning", "테스트용 메일 주소 목록을 불러오는 중입니다.", {
-      request: "GET /api/v1/test-addresses",
+      request: "GET /api/v1/mails",
     });
   }
 
   refreshAddressesButton.disabled = true;
   try {
-    const { response, payload } = await authorizedFetch("/api/v1/test-addresses");
+    const { response, payload } = await authorizedFetch("/api/v1/mails");
     if (!response.ok) {
       if (response.status !== 401) {
         setStatus("status-error", payload.message || "목록을 불러오지 못했습니다.", payload);
@@ -343,12 +343,12 @@ async function updateSelectedAddress(nextEmail) {
 
   updateAddressButton.disabled = true;
   setStatus("status-warning", "테스트용 메일 주소를 수정하는 중입니다.", {
-    request: `PUT /api/v1/test-addresses/${selectedId}`,
+    request: `PUT /api/v1/mails/${selectedId}`,
     email: nextEmail,
   });
 
   try {
-    const { response, payload } = await authorizedFetch(`/api/v1/test-addresses/${selectedId}`, {
+    const { response, payload } = await authorizedFetch(`/api/v1/mails/${selectedId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -396,12 +396,12 @@ async function deleteSelectedAddress() {
 
   deleteAddressButton.disabled = true;
   setStatus("status-warning", "테스트용 메일 주소를 삭제하는 중입니다.", {
-    request: `DELETE /api/v1/test-addresses/${selectedId}`,
+    request: `DELETE /api/v1/mails/${selectedId}`,
     email: selectedAddress.email,
   });
 
   try {
-    const { response, payload } = await authorizedFetch(`/api/v1/test-addresses/${selectedId}`, {
+    const { response, payload } = await authorizedFetch(`/api/v1/mails/${selectedId}`, {
       method: "DELETE",
     });
 
@@ -569,11 +569,11 @@ generateCandidateButton.addEventListener("click", async () => {
 
   generateCandidateButton.disabled = true;
   setStatus("status-warning", "후보 메일 주소를 생성하는 중입니다.", {
-    request: "POST /api/v1/test-addresses/generate",
+    request: "POST /api/v1/mails/generate",
   });
 
   try {
-    const { response, payload } = await authorizedFetch("/api/v1/test-addresses/generate", {
+    const { response, payload } = await authorizedFetch("/api/v1/mails/generate", {
       method: "POST",
     });
     if (!response.ok) {
@@ -613,12 +613,12 @@ createAddressForm.addEventListener("submit", async (event) => {
 
   createAddressButton.disabled = true;
   setStatus("status-warning", "테스트용 메일 주소를 생성하는 중입니다.", {
-    request: "POST /api/v1/test-addresses",
+    request: "POST /api/v1/mails",
     email,
   });
 
   try {
-    const { response, payload } = await authorizedFetch("/api/v1/test-addresses", {
+    const { response, payload } = await authorizedFetch("/api/v1/mails", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

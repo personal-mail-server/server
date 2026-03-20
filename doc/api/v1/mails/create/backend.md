@@ -9,13 +9,13 @@
 - `doc/domain/mail/server-requirements.md`
 - `doc/domain/mail/pr-split/03-create-api.md`
 - `doc/domain/mail/test-address-model.md`
-- `doc/api/v1/test-addresses/generate/backend.md`
+- `doc/api/v1/mails/generate/backend.md`
 
 ---
 
 ## 엔드포인트
 - 메서드: `POST`
-- 경로: `/api/v1/test-addresses`
+- 경로: `/api/v1/mails`
 
 ---
 

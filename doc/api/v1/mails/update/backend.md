@@ -14,7 +14,7 @@
 
 ## 엔드포인트
 - 메서드: `PUT`
-- 경로: `/api/v1/test-addresses/{id}`
+- 경로: `/api/v1/mails/{id}`
 
 ---
 

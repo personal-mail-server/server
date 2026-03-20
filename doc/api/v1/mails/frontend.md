@@ -8,11 +8,11 @@
 ## 기준 문서
 - `doc/domain/mail/pr-split/07-frontend-read-create.md`
 - `doc/domain/mail/server-requirements.md`
-- `doc/api/v1/test-addresses/create/backend.md`
-- `doc/api/v1/test-addresses/read/backend.md`
-- `doc/api/v1/test-addresses/generate/backend.md`
-- `doc/api/v1/test-addresses/update/backend.md`
-- `doc/api/v1/test-addresses/delete/backend.md`
+- `doc/api/v1/mails/create/backend.md`
+- `doc/api/v1/mails/read/backend.md`
+- `doc/api/v1/mails/generate/backend.md`
+- `doc/api/v1/mails/update/backend.md`
+- `doc/api/v1/mails/delete/backend.md`
 
 ---
 

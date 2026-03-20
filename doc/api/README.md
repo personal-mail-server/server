@@ -18,7 +18,7 @@
   - `design.md`
   - `backend.md`
   - `frontend.md`
-- `doc/api/v1/test-addresses/create/`
+- `doc/api/v1/mails/create/`
   - `backend.md`
   - `frontend.md`
 

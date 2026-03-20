@@ -14,7 +14,7 @@
 
 ## 목록 조회 API
 - 메서드: `GET`
-- 경로: `/api/v1/test-addresses`
+- 경로: `/api/v1/mails`
 
 ### 인증
 - Bearer 액세스 토큰이 필요하다.
@@ -43,7 +43,7 @@
 
 ## 상세 조회 API
 - 메서드: `GET`
-- 경로: `/api/v1/test-addresses/{id}`
+- 경로: `/api/v1/mails/{id}`
 
 ### 인증
 - Bearer 액세스 토큰이 필요하다.
