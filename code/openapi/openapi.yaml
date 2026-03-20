@@ -182,6 +182,36 @@ paths:
                 code: INTERNAL_SERVER_ERROR
                 message: 요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요.
   /api/v1/test-addresses:
+    get:
+      summary: 테스트용 메일 주소 목록 조회
+      description: Bearer 액세스 토큰을 검증한 뒤 현재 사용자의 테스트용 메일 주소 목록을 반환한다.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestAddressListResponse'
+        '401':
+          description: 인증 실패 또는 무효 세션
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INVALID_ACCESS_TOKEN
+                message: 인증 정보가 유효하지 않습니다. 다시 로그인해 주세요.
+        '500':
+          description: 서버 내부 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_SERVER_ERROR
+                message: 요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요.
     post:
       summary: 테스트용 메일 주소 생성
       description: Bearer 액세스 토큰을 검증한 뒤 사용자가 입력한 테스트용 메일 주소를 생성한다.
@@ -237,6 +267,53 @@ paths:
               example:
                 code: DUPLICATE_TEST_ADDRESS_EMAIL
                 message: 이미 사용 중인 메일 주소입니다.
+        '500':
+          description: 서버 내부 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INTERNAL_SERVER_ERROR
+                message: 요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요.
+  /api/v1/test-addresses/{id}:
+    get:
+      summary: 테스트용 메일 주소 상세 조회
+      description: Bearer 액세스 토큰을 검증한 뒤 지정한 테스트용 메일 주소의 상세 정보를 반환한다.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 상세 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestAddressResponse'
+        '401':
+          description: 인증 실패 또는 무효 세션
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: INVALID_ACCESS_TOKEN
+                message: 인증 정보가 유효하지 않습니다. 다시 로그인해 주세요.
+        '404':
+          description: 존재하지 않는 테스트용 메일 주소
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                code: RESOURCE_NOT_FOUND
+                message: 요청한 대상을 찾을 수 없습니다.
         '500':
           description: 서버 내부 오류
           content:
@@ -355,3 +432,12 @@ components:
           type: string
           format: date-time
           nullable: true
+    TestAddressListResponse:
+      type: object
+      required:
+        - addresses
+      properties:
+        addresses:
+          type: array
+          items:
+            $ref: '#/components/schemas/TestAddressResponse'

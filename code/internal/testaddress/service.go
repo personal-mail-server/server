@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"personal-mail-server/internal/auth"
 )
@@ -115,6 +116,45 @@ func (s *Service) Create(ctx context.Context, rawAccessToken string, req CreateR
 	}
 
 	return NewResponse(created), nil
+}
+
+func (s *Service) List(ctx context.Context, rawAccessToken string) (*ListResponse, *auth.AppError) {
+	user, appErr := s.authenticateUser(ctx, rawAccessToken)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	addresses, err := s.repo.ListByOwner(ctx, user.ID)
+	if err != nil {
+		return nil, auth.NewInternalServerError()
+	}
+
+	return NewListResponse(addresses), nil
+}
+
+func (s *Service) GetByID(ctx context.Context, rawAccessToken string, rawID string) (*Response, *auth.AppError) {
+	user, appErr := s.authenticateUser(ctx, rawAccessToken)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	id, err := strconv.ParseInt(rawID, 10, 64)
+	if err != nil || id <= 0 {
+		return nil, auth.NewNotFound()
+	}
+
+	address, repoErr := s.repo.GetByID(ctx, id)
+	if repoErr != nil {
+		if errors.Is(repoErr, ErrTestMailAddressNotFound) {
+			return nil, auth.NewNotFound()
+		}
+		return nil, auth.NewInternalServerError()
+	}
+	if address.OwnerUserID != user.ID {
+		return nil, auth.NewNotFound()
+	}
+
+	return NewResponse(address), nil
 }
 
 func (s *Service) authenticateUser(ctx context.Context, rawAccessToken string) (*auth.User, *auth.AppError) {

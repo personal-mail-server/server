@@ -68,8 +68,9 @@
   - test mail address repository package
   - test mail address candidate generation API
   - test mail address create API
+  - test mail address list/detail read APIs
 - not_yet_implemented:
-  - test mail address read/update/delete APIs
+  - test mail address update/delete APIs
   - test mail address frontend UI
 
 ## sync_note

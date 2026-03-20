@@ -54,3 +54,33 @@ func (h *TestAddressHandler) Create(c echo.Context) error {
 
 	return c.JSON(http.StatusCreated, resp)
 }
+
+func (h *TestAddressHandler) List(c echo.Context) error {
+	rawToken, ok := extractBearerToken(c.Request().Header.Get(echo.HeaderAuthorization))
+	if !ok {
+		appErr := auth.NewInvalidAccessToken()
+		return c.JSON(appErr.Status, auth.ErrorResponse{Code: appErr.Code, Message: appErr.Message})
+	}
+
+	resp, appErr := h.service.List(c.Request().Context(), rawToken)
+	if appErr != nil {
+		return c.JSON(appErr.Status, auth.ErrorResponse{Code: appErr.Code, Message: appErr.Message})
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}
+
+func (h *TestAddressHandler) GetByID(c echo.Context) error {
+	rawToken, ok := extractBearerToken(c.Request().Header.Get(echo.HeaderAuthorization))
+	if !ok {
+		appErr := auth.NewInvalidAccessToken()
+		return c.JSON(appErr.Status, auth.ErrorResponse{Code: appErr.Code, Message: appErr.Message})
+	}
+
+	resp, appErr := h.service.GetByID(c.Request().Context(), rawToken, c.Param("id"))
+	if appErr != nil {
+		return c.JSON(appErr.Status, auth.ErrorResponse{Code: appErr.Code, Message: appErr.Message})
+	}
+
+	return c.JSON(http.StatusOK, resp)
+}

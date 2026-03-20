@@ -70,6 +70,7 @@ func (f *fakeCandidateGenerator) Next() (string, error) {
 
 type memoryRepo struct {
 	byEmail map[string]TestMailAddress
+	byID    map[int64]TestMailAddress
 	err     error
 }
 
@@ -87,17 +88,28 @@ func (m *memoryRepo) Create(_ context.Context, address TestMailAddress) (*TestMa
 		CreatedAt:   time.Date(2026, 3, 20, 0, 0, 0, 0, time.UTC),
 		UpdatedAt:   time.Date(2026, 3, 20, 0, 0, 0, 0, time.UTC),
 	}
+	if m.byEmail == nil {
+		m.byEmail = map[string]TestMailAddress{}
+	}
+	if m.byID == nil {
+		m.byID = map[int64]TestMailAddress{}
+	}
 	m.byEmail[address.Email] = created
+	m.byID[created.ID] = created
 	return &created, nil
 }
-func (m *memoryRepo) GetByID(context.Context, int64) (*TestMailAddress, error) { panic("not used") }
-func (m *memoryRepo) ListByOwner(context.Context, int64) ([]TestMailAddress, error) {
-	panic("not used")
+
+func (m *memoryRepo) GetByID(_ context.Context, id int64) (*TestMailAddress, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	address, ok := m.byID[id]
+	if !ok {
+		return nil, ErrTestMailAddressNotFound
+	}
+	copy := address
+	return &copy, nil
 }
-func (m *memoryRepo) Update(context.Context, TestMailAddress) (*TestMailAddress, error) {
-	panic("not used")
-}
-func (m *memoryRepo) SoftDelete(context.Context, int64, time.Time) error { panic("not used") }
 
 func (m *memoryRepo) GetByEmail(_ context.Context, email string) (*TestMailAddress, error) {
 	if m.err != nil {
@@ -110,6 +122,25 @@ func (m *memoryRepo) GetByEmail(_ context.Context, email string) (*TestMailAddre
 	copy := address
 	return &copy, nil
 }
+
+func (m *memoryRepo) ListByOwner(_ context.Context, ownerID int64) ([]TestMailAddress, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	result := make([]TestMailAddress, 0)
+	for _, address := range m.byEmail {
+		if address.OwnerUserID == ownerID && address.DeletedAt == nil {
+			result = append(result, address)
+		}
+	}
+	return result, nil
+}
+
+func (m *memoryRepo) Update(context.Context, TestMailAddress) (*TestMailAddress, error) {
+	panic("not used")
+}
+
+func (m *memoryRepo) SoftDelete(context.Context, int64, time.Time) error { panic("not used") }
 
 func TestGenerateCandidateReturnsAvailableEmail(t *testing.T) {
 	repo := &memoryRepo{byEmail: map[string]TestMailAddress{"taken@mail.local": {ID: 1, Email: "taken@mail.local"}}}
@@ -159,7 +190,7 @@ func TestGenerateCandidateReturnsInternalErrorOnRepositoryFailure(t *testing.T) 
 }
 
 func TestCreateStoresAddressForAuthenticatedUser(t *testing.T) {
-	repo := &memoryRepo{byEmail: map[string]TestMailAddress{}}
+	repo := &memoryRepo{byEmail: map[string]TestMailAddress{}, byID: map[int64]TestMailAddress{}}
 	issuer := fakeTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 3, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}}
 	users := fakeUserReader{user: &auth.User{ID: 44, LoginID: "user-01", SessionVersion: 3}}
 	service := newService(repo, users, issuer, nil)
@@ -178,7 +209,7 @@ func TestCreateStoresAddressForAuthenticatedUser(t *testing.T) {
 }
 
 func TestCreateRejectsDuplicateEmail(t *testing.T) {
-	repo := &memoryRepo{byEmail: map[string]TestMailAddress{"dup@mail.local": {ID: 1, Email: "dup@mail.local"}}}
+	repo := &memoryRepo{byEmail: map[string]TestMailAddress{"dup@mail.local": {ID: 1, Email: "dup@mail.local"}}, byID: map[int64]TestMailAddress{1: {ID: 1, Email: "dup@mail.local"}}}
 	issuer := fakeTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}}
 	users := fakeUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}
 	service := newService(repo, users, issuer, nil)
@@ -204,5 +235,53 @@ func TestCreateRejectsMissingEmail(t *testing.T) {
 	_, appErr := service.Create(context.Background(), "valid-token", CreateRequest{})
 	if appErr == nil || appErr.Code != auth.CodeMissingRequired {
 		t.Fatalf("expected missing required error, got %+v", appErr)
+	}
+}
+
+func TestListReturnsOnlyOwnersActiveAddresses(t *testing.T) {
+	deletedAt := time.Date(2026, 3, 20, 1, 0, 0, 0, time.UTC)
+	repo := &memoryRepo{byEmail: map[string]TestMailAddress{
+		"one@mail.local":   {ID: 1, OwnerUserID: 7, Email: "one@mail.local"},
+		"two@mail.local":   {ID: 2, OwnerUserID: 7, Email: "two@mail.local"},
+		"other@mail.local": {ID: 3, OwnerUserID: 9, Email: "other@mail.local"},
+		"gone@mail.local":  {ID: 4, OwnerUserID: 7, Email: "gone@mail.local", DeletedAt: &deletedAt},
+	}}
+	issuer := fakeTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}}
+	users := fakeUserReader{user: &auth.User{ID: 7, LoginID: "user-01", SessionVersion: 1}}
+	service := newService(repo, users, issuer, nil)
+
+	resp, appErr := service.List(context.Background(), "valid-token")
+	if appErr != nil {
+		t.Fatalf("expected success, got %+v", appErr)
+	}
+	if len(resp.Addresses) != 2 {
+		t.Fatalf("expected 2 addresses, got %+v", resp)
+	}
+}
+
+func TestGetByIDReturnsAddressForOwner(t *testing.T) {
+	repo := &memoryRepo{byID: map[int64]TestMailAddress{11: {ID: 11, OwnerUserID: 5, Email: "owned@mail.local"}}}
+	issuer := fakeTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 2, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}}
+	users := fakeUserReader{user: &auth.User{ID: 5, LoginID: "user-01", SessionVersion: 2}}
+	service := newService(repo, users, issuer, nil)
+
+	resp, appErr := service.GetByID(context.Background(), "valid-token", "11")
+	if appErr != nil {
+		t.Fatalf("expected success, got %+v", appErr)
+	}
+	if resp.ID != 11 || resp.Email != "owned@mail.local" {
+		t.Fatalf("unexpected response: %+v", resp)
+	}
+}
+
+func TestGetByIDReturnsNotFoundForNonOwner(t *testing.T) {
+	repo := &memoryRepo{byID: map[int64]TestMailAddress{11: {ID: 11, OwnerUserID: 99, Email: "hidden@mail.local"}}}
+	issuer := fakeTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 2, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}}
+	users := fakeUserReader{user: &auth.User{ID: 5, LoginID: "user-01", SessionVersion: 2}}
+	service := newService(repo, users, issuer, nil)
+
+	_, appErr := service.GetByID(context.Background(), "valid-token", "11")
+	if appErr == nil || appErr.Status != 404 {
+		t.Fatalf("expected not found, got %+v", appErr)
 	}
 }
