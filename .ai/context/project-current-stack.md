@@ -4,11 +4,15 @@
 - AI-only structured context for the current implemented project stack.
 - Not an authoritative document.
 - Source of truth remains `doc/project/current-stack.md` and actual files under `code/`.
+- Migration and rollback details are additionally governed by `doc/project/database-migration.md`.
 
 ## source_documents
+- `doc/project/database-migration.md`
 - `doc/project/current-stack.md`
 - `TECH_STACK.md`
+- `code/cmd/migrate/main.go`
 - `code/go.mod`
+- `code/internal/db/migrate.go`
 - `code/docker-compose.yml`
 - `code/Dockerfile`
 - `code/frontend/Dockerfile`
@@ -18,6 +22,7 @@
 - backend_language: Go
 - backend_framework: Echo
 - database: PostgreSQL 16
+- database_migration: custom SQL up/down runner with manual rollback CLI
 - frontend: static HTML/CSS/JS served by nginx
 - api_contract: OpenAPI 3.0.3 static yaml
 - orchestration: Docker Compose
@@ -57,3 +62,4 @@
 
 ## sync_note
 - If runtime stack, framework choice, database, docker layout, ports, or API documentation strategy changes, this file must be re-reviewed.
+- If migration or rollback workflow changes, `project-database-migration.md` should be reviewed together.

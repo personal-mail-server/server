@@ -13,6 +13,7 @@
 - 현재 구현 기준 파일:
   - `code/internal/auth/service_test.go`
   - `code/internal/auth/validation_test.go`
+  - `code/internal/db/migrate_test.go`
   - `code/internal/http/handlers/auth_handler_test.go`
   - `code/README.md`
 
@@ -24,10 +25,13 @@
   - 인증 서비스 로직
   - 입력 검증 로직
   - 로그인/로그아웃/토큰 재발급 HTTP 핸들러 일부
+  - 마이그레이션 파일 탐색 및 롤백 파일 매핑 로직
 - 현재 실행 검증 대상:
   - `go test ./...`
   - `go build ./...`
   - `go vet ./...`
+  - `make migrate-up`
+  - `make migrate-down STEPS=1`
   - `make up` 기반 전체 스택 기동 확인
   - 로그인 화면 HTTP 응답 확인
   - Swagger 접근 확인
@@ -91,6 +95,15 @@
 - 새 PR 생성 흐름
 - auto-merge 예약 명령 호출 여부
 
+### 마이그레이션 유틸리티 테스트
+위치:
+- `code/internal/db/migrate_test.go`
+
+현재 검증 항목:
+- 업 마이그레이션 파일 목록이 오름차순으로 수집되는지 확인
+- `*.down.sql` 파일이 업 마이그레이션 목록에서 제외되는지 확인
+- 업 파일 기준으로 대응 다운 파일 경로가 올바르게 계산되는지 확인
+
 ---
 
 ## 통합 성격 검증
@@ -114,6 +127,12 @@
 go test ./...
 go build ./...
 go vet ./...
+```
+
+### 마이그레이션 검증
+```bash
+make migrate-up
+make migrate-down STEPS=1
 ```
 
 ### Docker 실행 검증
@@ -185,6 +204,7 @@ make down
 - 프론트엔드 전용 자동화 테스트
 - 실제 브라우저 자동화 기반 E2E 테스트
 - DB 격리 기반 통합 테스트 스위트
+- 실제 Postgres를 붙인 마이그레이션 업/다운 통합 테스트
 - 별도 보호 API 검증 테스트
 - 성능 테스트
 
@@ -198,6 +218,6 @@ make down
 ---
 
 ## 정리
-현재 프로젝트는 Go 단위 테스트와 Docker 기반 실행 검증을 함께 사용해 로그인/로그아웃/토큰 재발급 인증 슬라이스를 검증하고 있다.
+현재 프로젝트는 Go 단위 테스트와 Docker 기반 실행 검증을 함께 사용해 로그인/로그아웃/토큰 재발급 인증 슬라이스와 마이그레이션 유틸리티를 검증하고 있다.
 
 본 문서는 AI가 실제로 어떤 테스트를 작성하고 어떤 검증을 수행했는지 추적하기 위한 현재 상태 문서이며, 앞으로 테스트 체계가 바뀌면 지속적으로 함께 갱신되어야 한다.

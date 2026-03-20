@@ -17,7 +17,16 @@ docker compose -f code/docker-compose.yml up --build -d
 - `make down` - 전체 스택 종료
 - `make status` - 현재 컨테이너 상태 확인
 - `make logs` - 전체 스택 로그 확인
+- `make migrate-up` - 현재 DB에 아직 적용되지 않은 업 마이그레이션 적용
+- `make migrate-down STEPS=1` - 최근 적용된 마이그레이션부터 지정 개수만큼 롤백
 - `make push-trigger` - 현재 브랜치를 push하고 `main` 대상 PR 생성 또는 재사용 후 auto-merge 예약
+
+## 마이그레이션 롤백
+- 서버 기동 시에는 업 마이그레이션만 자동 적용된다.
+- 롤백은 수동 명령으로만 실행한다.
+- `make migrate-up`, `make migrate-down`은 Compose DB와 백엔드 이미지를 사용해 실행된다.
+- 각 `code/migrations/*.sql` 업 마이그레이션에는 대응하는 `code/migrations/*.down.sql` 파일이 있어야 한다.
+- 이미 적용되었을 수 있는 업 마이그레이션 파일은 수정하지 않고 새 보정 마이그레이션으로 대응한다.
 
 ## PUSH 자동화
 - 예약 트리거 `PUSH`의 로컬 실행 진입점은 `make push-trigger`이다.

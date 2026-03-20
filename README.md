@@ -143,6 +143,8 @@ make up
 - `make down` - 전체 스택 종료
 - `make status` - 현재 컨테이너 상태 확인
 - `make logs` - 전체 로그 확인
+- `make migrate-up` - 현재 DB에 아직 적용되지 않은 업 마이그레이션 적용
+- `make migrate-down STEPS=1` - 최근 적용된 마이그레이션부터 지정 개수만큼 롤백
 
 실행 후 주요 확인 경로:
 - 로그인 화면: `http://localhost:3000`

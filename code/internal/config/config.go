@@ -20,10 +20,7 @@ type Config struct {
 
 func Load() (Config, error) {
 	port := envInt("PORT", 8080)
-	databaseURL := strings.TrimSpace(os.Getenv("DATABASE_URL"))
-	if databaseURL == "" {
-		databaseURL = "postgres://postgres:postgres@db:5432/mail_server?sslmode=disable"
-	}
+	databaseURL := LoadDatabaseURL()
 
 	accessSecret := strings.TrimSpace(os.Getenv("ACCESS_TOKEN_SECRET"))
 	if accessSecret == "" {
@@ -46,6 +43,14 @@ func Load() (Config, error) {
 		AllowedOrigins:     allowedOrigins,
 		RequestTimeout:     time.Duration(envInt("REQUEST_TIMEOUT_SECONDS", 10)) * time.Second,
 	}, nil
+}
+
+func LoadDatabaseURL() string {
+	databaseURL := strings.TrimSpace(os.Getenv("DATABASE_URL"))
+	if databaseURL == "" {
+		return "postgres://postgres:postgres@db:5432/mail_server?sslmode=disable"
+	}
+	return databaseURL
 }
 
 func envInt(key string, fallback int) int {

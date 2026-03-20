@@ -15,7 +15,9 @@
   - `code/go.mod`
   - `code/Dockerfile`
   - `code/docker-compose.yml`
+  - `code/cmd/migrate/main.go`
   - `code/frontend/Dockerfile`
+  - `code/internal/db/migrate.go`
   - `code/openapi/openapi.yaml`
   - `code/internal/app/server.go`
 
@@ -59,6 +61,8 @@
 - 버전 계열: 16-alpine 이미지 사용
 - 연결 방식: Docker Compose 네트워크 내부 연결
 - 접속 문자열 기본값: `postgres://postgres:postgres@db:5432/mail_server?sslmode=disable`
+- 마이그레이션 방식: 커스텀 SQL 러너 + `schema_migrations` 테이블
+- 롤백 방식: 대응하는 `*.down.sql` 파일을 사용하는 수동 롤백 CLI
 
 현재 로그인 슬라이스 기준 DB 역할:
 - 사용자 계정 저장
@@ -66,6 +70,12 @@
 - 로그인 실패 횟수 저장
 - 계정 잠금 시간 저장
 - 마이그레이션 버전 관리
+
+현재 DB 변경 규칙:
+- 서버 시작 시 업 마이그레이션만 자동 적용한다.
+- 롤백은 서버 자동 기동이 아니라 수동 명령으로만 수행한다.
+- 각 업 마이그레이션은 같은 베이스 이름의 다운 마이그레이션 파일을 함께 가져야 한다.
+- 이미 적용된 업 마이그레이션 파일은 수정하지 않고 후속 보정 마이그레이션으로 변경한다.
 
 ---
 
@@ -110,6 +120,8 @@
 - `make down`
 - `make status`
 - `make logs`
+- `make migrate-up`
+- `make migrate-down STEPS=1`
 - `make push-trigger`
 
 현재 CI 진입점:
@@ -140,6 +152,7 @@
 
 ## 디렉토리 구성 요약
 - `code/cmd/server/` - 서버 엔트리포인트
+- `code/cmd/migrate/` - 수동 마이그레이션/롤백 CLI 엔트리포인트
 - `code/internal/` - 내부 애플리케이션 로직
 - `code/migrations/` - DB 마이그레이션
 - `code/openapi/` - OpenAPI 계약 파일
@@ -158,5 +171,7 @@
 
 ## 정리
 현재 프로젝트는 `Go + Echo + PostgreSQL + 정적 프론트엔드(nginx) + OpenAPI YAML + Docker Compose` 조합으로 로그인/로그아웃 인증 슬라이스가 구현되어 있다.
+
+또한 현재 DB 스키마 변경은 커스텀 SQL 업/다운 마이그레이션과 수동 롤백 CLI를 기준으로 관리한다.
 
 본 문서는 AI가 실제로 선택한 현재 구성을 설명하는 문서이며, 앞으로 프로젝트 구성이 바뀔 때 지속적으로 함께 갱신되어야 한다.

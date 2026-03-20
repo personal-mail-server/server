@@ -9,6 +9,7 @@
 - `doc/project/current-testing.md`
 - `code/internal/auth/service_test.go`
 - `code/internal/auth/validation_test.go`
+- `code/internal/db/migrate_test.go`
 - `code/internal/http/handlers/auth_handler_test.go`
 - `code/README.md`
 
@@ -19,10 +20,13 @@
   - auth handler tests
   - logout service and handler tests
   - token reissue service and handler tests
+  - migration utility tests for discovery and down-path derivation
 - execution_checks:
   - `go test ./...`
   - `go build ./...`
   - `go vet ./...`
+  - `make migrate-up`
+  - `make migrate-down STEPS=1`
   - `make up` stack startup check
   - `make status` stack status check
   - `make down` stack shutdown check
@@ -43,6 +47,7 @@
 - no frontend automated tests
 - no browser automation E2E tests
 - no isolated database integration test suite
+- no real Postgres migration up/down integration test suite
 - no dedicated protected API middleware coverage yet
 
 ## ci_status
