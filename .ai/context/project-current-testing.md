@@ -26,6 +26,7 @@
   - test mail address create service and handler tests
   - test mail address read service and handler tests
   - test mail address update service and handler tests
+  - test mail address delete service and handler tests
 - execution_checks:
   - `go test ./...`
   - `go build ./...`
@@ -77,6 +78,10 @@
   - `code/internal/http/handlers/testaddress_handler_test.go`
 - update_api_tests_exist: true
 - update_api_paths:
+  - `code/internal/testaddress/service_test.go`
+  - `code/internal/http/handlers/testaddress_handler_test.go`
+- delete_api_tests_exist: true
+- delete_api_paths:
   - `code/internal/testaddress/service_test.go`
   - `code/internal/http/handlers/testaddress_handler_test.go`
 

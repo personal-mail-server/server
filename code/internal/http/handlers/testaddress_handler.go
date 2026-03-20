@@ -107,3 +107,18 @@ func (h *TestAddressHandler) Update(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, resp)
 }
+
+func (h *TestAddressHandler) Delete(c echo.Context) error {
+	rawToken, ok := extractBearerToken(c.Request().Header.Get(echo.HeaderAuthorization))
+	if !ok {
+		appErr := auth.NewInvalidAccessToken()
+		return c.JSON(appErr.Status, auth.ErrorResponse{Code: appErr.Code, Message: appErr.Message})
+	}
+
+	appErr := h.service.Delete(c.Request().Context(), rawToken, c.Param("id"))
+	if appErr != nil {
+		return c.JSON(appErr.Status, auth.ErrorResponse{Code: appErr.Code, Message: appErr.Message})
+	}
+
+	return c.NoContent(http.StatusNoContent)
+}

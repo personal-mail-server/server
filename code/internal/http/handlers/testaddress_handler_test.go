@@ -122,7 +122,20 @@ func (r *testAddressRepo) Update(_ context.Context, address testaddress.TestMail
 	return &copy, nil
 }
 
-func (r *testAddressRepo) SoftDelete(context.Context, int64, time.Time) error { panic("not used") }
+func (r *testAddressRepo) SoftDelete(_ context.Context, id int64, deletedAt time.Time) error {
+	for key, address := range r.used {
+		if address.ID == id {
+			if address.DeletedAt != nil {
+				return testaddress.ErrTestMailAddressNotFound
+			}
+			address.DeletedAt = &deletedAt
+			address.UpdatedAt = deletedAt
+			r.used[key] = address
+			return nil
+		}
+	}
+	return testaddress.ErrTestMailAddressNotFound
+}
 
 func TestTestAddressHandlerGenerateCandidateMissingAuthorization(t *testing.T) {
 	e := echo.New()
@@ -372,6 +385,52 @@ func TestTestAddressHandlerUpdateNonOwnerAsNotFound(t *testing.T) {
 	c.SetParamValues("8")
 
 	if err := h.Update(c); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected status 404, got %d", rec.Code)
+	}
+}
+
+func TestTestAddressHandlerDeleteSuccess(t *testing.T) {
+	e := echo.New()
+	service := testaddress.NewService(&testAddressRepo{used: map[string]testaddress.TestMailAddress{
+		"own@mail.local": {ID: 8, OwnerUserID: 1, Email: "own@mail.local"},
+	}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
+	h := NewTestAddressHandler(service)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/test-addresses/8", nil)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/api/v1/test-addresses/:id")
+	c.SetParamNames("id")
+	c.SetParamValues("8")
+
+	if err := h.Delete(c); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("expected status 204, got %d", rec.Code)
+	}
+}
+
+func TestTestAddressHandlerDeleteNonOwnerAsNotFound(t *testing.T) {
+	e := echo.New()
+	service := testaddress.NewService(&testAddressRepo{used: map[string]testaddress.TestMailAddress{
+		"hidden@mail.local": {ID: 8, OwnerUserID: 99, Email: "hidden@mail.local"},
+	}}, testAddressUserReader{user: &auth.User{ID: 1, LoginID: "user-01", SessionVersion: 1}}, testAddressTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}})
+	h := NewTestAddressHandler(service)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/test-addresses/8", nil)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer valid-access-token")
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/api/v1/test-addresses/:id")
+	c.SetParamNames("id")
+	c.SetParamValues("8")
+
+	if err := h.Delete(c); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if rec.Code != http.StatusNotFound {

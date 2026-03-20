@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"personal-mail-server/internal/auth"
 )
@@ -209,6 +210,38 @@ func (s *Service) Update(ctx context.Context, rawAccessToken string, rawID strin
 	}
 
 	return NewResponse(updated), nil
+}
+
+func (s *Service) Delete(ctx context.Context, rawAccessToken string, rawID string) *auth.AppError {
+	user, appErr := s.authenticateUser(ctx, rawAccessToken)
+	if appErr != nil {
+		return appErr
+	}
+
+	id, err := strconv.ParseInt(rawID, 10, 64)
+	if err != nil || id <= 0 {
+		return auth.NewNotFound()
+	}
+
+	current, repoErr := s.repo.GetByID(ctx, id)
+	if repoErr != nil {
+		if errors.Is(repoErr, ErrTestMailAddressNotFound) {
+			return auth.NewNotFound()
+		}
+		return auth.NewInternalServerError()
+	}
+	if current.OwnerUserID != user.ID {
+		return auth.NewNotFound()
+	}
+
+	if err := s.repo.SoftDelete(ctx, id, time.Now().UTC()); err != nil {
+		if errors.Is(err, ErrTestMailAddressNotFound) {
+			return auth.NewNotFound()
+		}
+		return auth.NewInternalServerError()
+	}
+
+	return nil
 }
 
 func (s *Service) authenticateUser(ctx context.Context, rawAccessToken string) (*auth.User, *auth.AppError) {

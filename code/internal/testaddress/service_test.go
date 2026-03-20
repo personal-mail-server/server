@@ -156,7 +156,20 @@ func (m *memoryRepo) Update(_ context.Context, address TestMailAddress) (*TestMa
 	return &copy, nil
 }
 
-func (m *memoryRepo) SoftDelete(context.Context, int64, time.Time) error { panic("not used") }
+func (m *memoryRepo) SoftDelete(_ context.Context, id int64, deletedAt time.Time) error {
+	if m.err != nil {
+		return m.err
+	}
+	current, ok := m.byID[id]
+	if !ok || current.DeletedAt != nil {
+		return ErrTestMailAddressNotFound
+	}
+	current.DeletedAt = &deletedAt
+	current.UpdatedAt = deletedAt
+	m.byID[id] = current
+	m.byEmail[current.Email] = current
+	return nil
+}
 
 func TestGenerateCandidateReturnsAvailableEmail(t *testing.T) {
 	repo := &memoryRepo{byEmail: map[string]TestMailAddress{"taken@mail.local": {ID: 1, Email: "taken@mail.local"}}}
@@ -361,6 +374,49 @@ func TestUpdateRejectsDeletedResourceAsNotFound(t *testing.T) {
 	service := newService(repo, users, issuer, nil)
 
 	_, appErr := service.Update(context.Background(), "valid-token", "8", UpdateRequest{Email: "new@mail.local"})
+	if appErr == nil || appErr.Status != 404 {
+		t.Fatalf("expected not found, got %+v", appErr)
+	}
+}
+
+func TestDeleteMarksOwnedAddressAsDeleted(t *testing.T) {
+	repo := &memoryRepo{
+		byEmail: map[string]TestMailAddress{"keep@mail.local": {ID: 8, OwnerUserID: 3, Email: "keep@mail.local"}},
+		byID:    map[int64]TestMailAddress{8: {ID: 8, OwnerUserID: 3, Email: "keep@mail.local"}},
+	}
+	issuer := fakeTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}}
+	users := fakeUserReader{user: &auth.User{ID: 3, LoginID: "user-01", SessionVersion: 1}}
+	service := newService(repo, users, issuer, nil)
+
+	appErr := service.Delete(context.Background(), "valid-token", "8")
+	if appErr != nil {
+		t.Fatalf("expected success, got %+v", appErr)
+	}
+	if repo.byID[8].DeletedAt == nil {
+		t.Fatalf("expected deleted_at to be set")
+	}
+}
+
+func TestDeleteRejectsNonOwnerAsNotFound(t *testing.T) {
+	repo := &memoryRepo{byID: map[int64]TestMailAddress{8: {ID: 8, OwnerUserID: 99, Email: "hidden@mail.local"}}}
+	issuer := fakeTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}}
+	users := fakeUserReader{user: &auth.User{ID: 3, LoginID: "user-01", SessionVersion: 1}}
+	service := newService(repo, users, issuer, nil)
+
+	appErr := service.Delete(context.Background(), "valid-token", "8")
+	if appErr == nil || appErr.Status != 404 {
+		t.Fatalf("expected not found, got %+v", appErr)
+	}
+}
+
+func TestDeleteRejectsAlreadyDeletedResource(t *testing.T) {
+	deletedAt := time.Date(2026, 3, 20, 5, 0, 0, 0, time.UTC)
+	repo := &memoryRepo{byID: map[int64]TestMailAddress{8: {ID: 8, OwnerUserID: 3, Email: "gone@mail.local", DeletedAt: &deletedAt}}}
+	issuer := fakeTokenIssuer{claims: &auth.AuthTokenClaims{TokenUse: auth.TokenUseAccess, SessionVersion: 1, RegisteredClaims: jwt.RegisteredClaims{Subject: "user-01"}}}
+	users := fakeUserReader{user: &auth.User{ID: 3, LoginID: "user-01", SessionVersion: 1}}
+	service := newService(repo, users, issuer, nil)
+
+	appErr := service.Delete(context.Background(), "valid-token", "8")
 	if appErr == nil || appErr.Status != 404 {
 		t.Fatalf("expected not found, got %+v", appErr)
 	}
