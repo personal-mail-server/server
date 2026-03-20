@@ -24,5 +24,6 @@ func Register(e *echo.Echo, authHandler *handlers.AuthHandler, testAddressHandle
 	testAddressGroup.GET("/:id", testAddressHandler.GetByID)
 	testAddressGroup.POST("", testAddressHandler.Create)
 	testAddressGroup.PUT("/:id", testAddressHandler.Update)
+	testAddressGroup.DELETE("/:id", testAddressHandler.Delete)
 	testAddressGroup.POST("/generate", testAddressHandler.GenerateCandidate)
 }
