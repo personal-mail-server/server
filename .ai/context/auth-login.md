@@ -3,12 +3,12 @@
 ## purpose
 - AI-only structured context for login-related source documents.
 - Not an authoritative document.
-- Source of truth remains `doc/auth/login.md` and `doc/auth/login-api.md`.
+- Source of truth remains `doc/api/v1/auth/login/design.md` and `doc/api/v1/auth/login/backend.md`.
 
 ## source_documents
-- `doc/auth/login.md`
-- `doc/auth/login-api.md`
-- `doc/auth/login-frontend.md`
+- `doc/api/v1/auth/login/design.md`
+- `doc/api/v1/auth/login/backend.md`
+- `doc/api/v1/auth/login/frontend.md`
 - `TRIGGERS.md`
 - `AGENTS.md`
 - `TECH_STACK.md`
@@ -19,8 +19,8 @@
 - For current local file access, use actual root paths first.
 
 ## document_status
-- login feature design exists: `doc/auth/login.md`
-- login API spec exists: `doc/auth/login-api.md`
+- login feature design exists: `doc/api/v1/auth/login/design.md`
+- login API spec exists: `doc/api/v1/auth/login/backend.md`
 - backend login slice exists under `code/`
 - frontend login slice exists under `code/frontend/`
 - docker runnable slice exists under `code/docker-compose.yml` and `code/Dockerfile`
@@ -36,7 +36,7 @@
   - password: `pass1234`
 
 ## frontend_document_status
-- frontend behavior doc exists: `doc/auth/login-frontend.md`
+- frontend behavior doc exists: `doc/api/v1/auth/login/frontend.md`
 - current frontend scope:
   - login form
   - client-side validation
@@ -158,4 +158,4 @@
 
 ## sync_note
 - This file was generated to sync `.ai/context` with newly added login source documents.
-- If `doc/auth/login.md` or `doc/auth/login-api.md` changes, this file must be re-reviewed.
+- If `doc/api/v1/auth/login/design.md` or `doc/api/v1/auth/login/backend.md` changes, this file must be re-reviewed.

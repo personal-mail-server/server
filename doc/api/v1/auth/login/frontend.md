@@ -3,13 +3,13 @@
 ## 문서 목적
 이 문서는 현재 구현된 로그인 웹 화면의 구조와 사용자 동작을 정의한다.
 
-본 문서는 프론트엔드 동작 문서이며, 로그인 기능의 핵심 규칙은 `doc/auth/login.md`, API 계약은 `doc/auth/login-api.md`를 기준으로 한다.
+본 문서는 프론트엔드 동작 문서이며, 로그인 기능의 핵심 규칙은 `doc/api/v1/auth/login/design.md`, API 계약은 `doc/api/v1/auth/login/backend.md`를 기준으로 한다.
 
 ---
 
 ## 기준 문서
-- 기능 설계 기준 문서: `doc/auth/login.md`
-- API 기준 문서: `doc/auth/login-api.md`
+- 기능 설계 기준 문서: `doc/api/v1/auth/login/design.md`
+- API 기준 문서: `doc/api/v1/auth/login/backend.md`
 - 현재 구현 기준 파일:
   - `code/frontend/index.html`
   - `code/frontend/styles.css`

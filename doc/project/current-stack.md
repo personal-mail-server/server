@@ -178,7 +178,9 @@
 - `code/migrations/` - DB 마이그레이션
 - `code/openapi/` - OpenAPI 계약 파일
 - `code/frontend/` - 로그인 프론트엔드 정적 자산 및 nginx 설정
-- `doc/auth/` - 인증 관련 기준 문서
+- `doc/api/v1/auth/` - 인증 API URL 루트 기준 문서
+- `doc/api/v1/test-addresses/` - 테스트용 메일 주소 API URL 루트 기준 문서
+- `doc/domain/mail/` - 메일 도메인 요구사항/모델/PR 분할 계획 문서
 - `doc/project/` - 프로젝트 구성/운영 관점 기준 문서
 
 ---

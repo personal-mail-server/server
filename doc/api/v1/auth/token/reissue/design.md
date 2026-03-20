@@ -8,9 +8,9 @@
 ---
 
 ## 기준 문서
-- 기능 설계 기준 문서: `doc/auth/login.md`
-- 연관 기능 설계 문서: `doc/auth/logout.md`
-- API 기준 문서: `doc/auth/login-api.md`
+- 기능 설계 기준 문서: `doc/api/v1/auth/login/design.md`
+- 연관 기능 설계 문서: `doc/api/v1/auth/logout/design.md`
+- API 기준 문서: `doc/api/v1/auth/login/backend.md`
 - 문서 저장소 기준: `doc/README.md`
 - 기술 및 운영 기준: `TECH_STACK.md`
 

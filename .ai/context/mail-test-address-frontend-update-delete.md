@@ -2,13 +2,13 @@
 
 ## purpose
 - AI-only structured context for PR 8 frontend update/delete additions.
-- Source of truth remains `doc/mail/test-address-frontend.md`.
+- Source of truth remains `doc/api/v1/test-addresses/frontend.md`.
 
 ## source_documents
-- `doc/mail/test-address-frontend.md`
+- `doc/api/v1/test-addresses/frontend.md`
 - `doc/mail/pr-split/08-frontend-update-delete.md`
-- `doc/mail/test-address-update-api.md`
-- `doc/mail/test-address-delete-api.md`
+- `doc/api/v1/test-addresses/update/backend.md`
+- `doc/api/v1/test-addresses/delete/backend.md`
 
 ## ui_summary
 - detail panel now includes inline update form
@@ -17,4 +17,4 @@
 - delete success removes item from list and reselects another item when available
 
 ## sync_note
-- If update/delete UI behavior changes, re-review this file with `doc/mail/test-address-frontend.md`.
+- If update/delete UI behavior changes, re-review this file with `doc/api/v1/test-addresses/frontend.md`.

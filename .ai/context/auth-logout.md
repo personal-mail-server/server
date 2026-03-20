@@ -3,15 +3,15 @@
 ## purpose
 - AI-only structured context for logout-related source documents.
 - Not an authoritative document.
-- Source of truth remains `doc/auth/logout.md`, `doc/auth/logout-api.md`, and `doc/auth/logout-frontend.md`.
+- Source of truth remains `doc/api/v1/auth/logout/design.md`, `doc/api/v1/auth/logout/backend.md`, and `doc/api/v1/auth/logout/frontend.md`.
 
 ## source_documents
-- `doc/auth/logout.md`
-- `doc/auth/logout-api.md`
-- `doc/auth/logout-frontend.md`
-- `doc/auth/login.md`
-- `doc/auth/login-api.md`
-- `doc/auth/login-frontend.md`
+- `doc/api/v1/auth/logout/design.md`
+- `doc/api/v1/auth/logout/backend.md`
+- `doc/api/v1/auth/logout/frontend.md`
+- `doc/api/v1/auth/login/design.md`
+- `doc/api/v1/auth/login/backend.md`
+- `doc/api/v1/auth/login/frontend.md`
 - `TECH_STACK.md`
 - `TRIGGERS.md`
 
@@ -21,9 +21,9 @@
 - For current local file access, use actual root paths first.
 
 ## document_status
-- logout feature design exists: `doc/auth/logout.md`
-- logout API spec exists: `doc/auth/logout-api.md`
-- logout frontend behavior doc exists: `doc/auth/logout-frontend.md`
+- logout feature design exists: `doc/api/v1/auth/logout/design.md`
+- logout API spec exists: `doc/api/v1/auth/logout/backend.md`
+- logout frontend behavior doc exists: `doc/api/v1/auth/logout/frontend.md`
 - current codebase includes logout runtime path and frontend logout entry
 - logout-specific API details have been confirmed by the user and reflected in source documents
 

@@ -6,9 +6,9 @@
 ---
 
 ## 기준 문서
-- `doc/mail/server-requirements.md`
-- `doc/mail/pr-split/04-read-api.md`
-- `doc/mail/test-address-model.md`
+- `doc/domain/mail/server-requirements.md`
+- `doc/domain/mail/pr-split/04-read-api.md`
+- `doc/domain/mail/test-address-model.md`
 
 ---
 

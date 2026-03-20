@@ -2,10 +2,10 @@
 
 ## purpose
 - AI-only structured context for the test mail address generate API document.
-- Source of truth remains `doc/mail/test-address-generate-api.md`.
+- Source of truth remains `doc/api/v1/test-addresses/generate/backend.md`.
 
 ## source_documents
-- `doc/mail/test-address-generate-api.md`
+- `doc/api/v1/test-addresses/generate/backend.md`
 - `doc/mail/server-requirements.md`
 - `doc/mail/pr-split/02-generate-api.md`
 
@@ -17,4 +17,4 @@
 - current_default_domain: `mail.local`
 
 ## sync_note
-- If the generate API contract or candidate email domain changes, re-review this file with `doc/mail/test-address-generate-api.md`.
+- If the generate API contract or candidate email domain changes, re-review this file with `doc/api/v1/test-addresses/generate/backend.md`.

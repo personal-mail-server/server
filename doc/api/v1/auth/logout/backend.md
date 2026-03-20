@@ -3,13 +3,13 @@
 ## 문서 목적
 이 문서는 Personal Mail Server의 로그아웃 기능에 대한 API 계약을 정의한다.
 
-본 문서는 `doc/auth/logout.md`의 기능 설계를 바탕으로 작성되며, 로그아웃 요청과 응답, 인증 규칙, 상태 코드, 전체 세션 무효화 기준을 명확히 하는 것을 목적으로 한다.
+본 문서는 `doc/api/v1/auth/logout/design.md`의 기능 설계를 바탕으로 작성되며, 로그아웃 요청과 응답, 인증 규칙, 상태 코드, 전체 세션 무효화 기준을 명확히 하는 것을 목적으로 한다.
 
 ---
 
 ## 기준 문서
-- 기능 설계 기준 문서: `doc/auth/logout.md`
-- 로그인 API 기준 문서: `doc/auth/login-api.md`
+- 기능 설계 기준 문서: `doc/api/v1/auth/logout/design.md`
+- 로그인 API 기준 문서: `doc/api/v1/auth/login/backend.md`
 - 문서 저장소 기준: `doc/README.md`
 - 기술 및 운영 기준: `TECH_STACK.md`
 

@@ -2,10 +2,10 @@
 
 ## purpose
 - AI-only structured context for the test mail address read API document.
-- Source of truth remains `doc/mail/test-address-read-api.md`.
+- Source of truth remains `doc/api/v1/test-addresses/read/backend.md`.
 
 ## source_documents
-- `doc/mail/test-address-read-api.md`
+- `doc/api/v1/test-addresses/read/backend.md`
 - `doc/mail/server-requirements.md`
 - `doc/mail/pr-split/04-read-api.md`
 
@@ -17,4 +17,4 @@
 - detail_scope: current owner only, non-owner hidden as 404
 
 ## sync_note
-- If read API contract, ownership rule, or list/detail response shape changes, re-review this file with `doc/mail/test-address-read-api.md`.
+- If read API contract, ownership rule, or list/detail response shape changes, re-review this file with `doc/api/v1/test-addresses/read/backend.md`.
